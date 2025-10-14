@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Soul Society - Upload</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .page-border {
+            border: 2px solid #ffffff;
+            min-height: calc(100vh - 40px);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .upload-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .input-group {
+            display: none; /* Hide the input group since URL is removed */
+        }
+        
+        .input-label {
+            font-size: 14px;
+            text-transform: uppercase;
+        }
+        
+        .input-field {
+            background-color: transparent;
+            border: 2px solid #ffffff;
+            padding: 15px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .input-field:focus {
+            outline: none;
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .upload-area {
+            border: 2px solid #ffffff;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .upload-area:hover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .upload-area.dragover {
+            background-color: #ffffff;
+            color: #000000;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .file-info {
+            border: 2px solid #ffffff;
+            padding: 20px;
+            display: none;
+        }
+        
+        .file-info.active {
+            display: block;
+        }
+        
+        .file-detail {
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+        
+        .file-detail:last-child {
+            margin-bottom: 0;
+        }
+        
+        .action-btn {
+            background-color: transparent;
+            border: 2px solid #ffffff;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+        
+        .action-btn:hover {
+            background-color: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        .action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .action-btn:disabled:hover {
+            background-color: transparent;
+            color: #ffffff;
+            transform: none;
+        }
+        
+        .response-area {
+            border: 2px solid #ffffff;
+            padding: 20px;
+            display: none;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .response-area.active {
+            display: block;
+        }
+        
+        .response-title {
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+        
+        .response-content {
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 15px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-border">
+        <div class="title">SOUL SOCIETY - UPLOAD</div>
+        
+        <div class="upload-container">
+            <!-- Removed endpoint URL input -->
+
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">↑</div>
+                <div class="upload-text">CLICK OR DROP FILE HERE</div>
+                <div class="upload-subtext">Select a file to upload</div>
+            </div>
+            
+            <input type="file" id="fileInput" />
+            
+            <div class="file-info" id="fileInfo">
+                <div class="file-detail">NAME: <span id="fileName"></span></div>
+                <div class="file-detail">SIZE: <span id="fileSize"></span></div>
+                <div class="file-detail">TYPE: <span id="fileType"></span></div>
+            </div>
+            
+            <div class="actions">
+                <button class="action-btn" id="uploadBtn" disabled>UPLOAD</button>
+                <button class="action-btn" id="clearBtn" disabled>CLEAR</button>
+            </div>
+            
+            <div class="response-area" id="responseArea">
+                <div class="response-title">RESPONSE:</div>
+                <div class="response-content" id="responseContent"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileName = document.getElementById('fileName');
+        const fileSize = document.getElementById('fileSize');
+        const fileType = document.getElementById('fileType');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const responseArea = document.getElementById('responseArea');
+        const responseContent = document.getElementById('responseContent');
+        
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+        
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+        
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+        
+        function handleFile(file) {
+            if (!file) return;
+            
+            selectedFile = file;
+            
+            fileName.textContent = file.name;
+            fileSize.textContent = formatBytes(file.size);
+            fileType.textContent = file.type || 'application/octet-stream';
+            
+            fileInfo.classList.add('active');
+            uploadBtn.disabled = false;
+            clearBtn.disabled = false;
+            responseArea.classList.remove('active');
+        }
+        
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        }
+        
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+            
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = 'UPLOADING...';
+            
+            try {
+                const contentType = selectedFile.type || 'application/octet-stream';
+                const contentLength = selectedFile.size;
+
+                // POST to current page URL
+                const response = await fetch('/Upload', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': contentType,
+                        'Content-Length': contentLength.toString()
+                    },
+                    body: selectedFile
+                });
+                
+                const result = await response.text();
+                
+                const locationHeader = response.headers.get('Location');
+                const l_contentType = response.headers.get('Content-Type');
+                const l_contentLength = response.headers.get('Content-Length');
+
+                responseContent.textContent = `STATUS: ${response.status} ${response.statusText}\nLOCATION SENT: ${locationHeader}\n \nRESPONSE BODY:\n${result}`;
+                responseArea.classList.add('active');
+                
+            } catch (error) {
+                responseContent.textContent = `ERROR: ${error.message}`;
+                responseArea.classList.add('active');
+            }
+            
+            uploadBtn.disabled = false;
+            uploadBtn.textContent = 'UPLOAD';
+        });
+        
+        clearBtn.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            fileInfo.classList.remove('active');
+            responseArea.classList.remove('active');
+            uploadBtn.disabled = true;
+            clearBtn.disabled = true;
+        });
+    </script>
+</body>
+</html>

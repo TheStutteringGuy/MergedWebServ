@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:22 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/08 21:55:07 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/10/14 14:25:15 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,6 +78,11 @@ private:
   };
 
   class InvalidClientBodySize : public std::exception
+  {
+    virtual const char *what() const throw();
+  };
+  
+  class InvalidReturnCode : public std::exception
   {
     virtual const char *what() const throw();
   };

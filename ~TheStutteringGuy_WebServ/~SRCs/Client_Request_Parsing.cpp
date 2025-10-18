@@ -150,6 +150,8 @@ void Client::headers_implication()
 
         if (NULL != content_length)
         {
+            if (std::strtol((*content_length)[0].c_str(), NULL, 10) < 0)
+                this->response_Error(400, true);
             if (std::strtoul((*content_length)[0].c_str(), NULL, 10) > this->m_Myserver.m_client_max_body_size)
                 this->response_Error(413, true);
             this->m_isChunked = false;

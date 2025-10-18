@@ -1,5 +1,5 @@
 #include "WebServer.hpp"
-#include <map>
+#include <cerrno>
 
 #define TIMEOUT_SEC 30000000
 
@@ -17,9 +17,9 @@ void multiplexer(void)
     www::fd_t &epoll_fd = ValuesSingleton::getValuesSingleton().epoll_fd;
     std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
     std::map<www::fd_t, MyServerBlock>  &serverfd_map = ValuesSingleton::getValuesSingleton()._serverfd_map;
-    
-    size_t timeout = getTime();
+    std::vector<www::fd_t> &_CGIfds_map = CGIManagerSingleton::getCGIManagerSingleton()._CGIfds_map;
 
+    size_t timeout = getTime();
     std::map<int, Client>::iterator it = client_map.begin();
     while (it != client_map.end())
     {
@@ -38,11 +38,15 @@ void multiplexer(void)
     epoll_event events[MAX_EVENTS];
     int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 10000);
     if (-1 == n)
+    {
+        if (errno == EINTR)
+            throw www::SHUTDOWN;
         throw std::logic_error("epoll_wait() " + static_cast<std::string>(strerror(errno)));
+    }
 
     if (0 == n)
         return;
-    for (int index = 0; index < n; ++index)
+    for (int index = 0; index < n && www::SHUTDOWN == false; ++index)
     {
         if (serverfd_map.find(events[index].data.fd) != serverfd_map.end())
         {
@@ -65,13 +69,18 @@ void multiplexer(void)
         }
         else
         {
+            if (std::find(_CGIfds_map.begin(), _CGIfds_map.end(), events[index].data.fd) != _CGIfds_map.end())
+            {
+                // handleCGI_LOGIC;
+            }
+
             if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)
             {
                 std::cout << "[INFO] : (A Client Disconnected with an event other than EPOLLIN) fd Reserved = "<< events[index].data.fd << std::endl;
                 _clear(client_map[events[index].data.fd]);
                 continue;
             }
-            try 
+            try
             {
                 Client &_client = client_map[events[index].data.fd];
                 _client.m_connectedTime = getTime();
@@ -148,7 +157,7 @@ void multiplexer(void)
                 std::cerr << www::YELLOW << "[DEBUG] : " << e.what() << www::RESET << std::endl;
                 continue;
             }
-            catch (int &i)
+            catch (const int &i)
             {
                 switch (i) {
                     case CONTINUE: continue;

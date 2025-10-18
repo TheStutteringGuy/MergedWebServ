@@ -46,6 +46,11 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock)
     actual_URI.erase(0, 1);
     actual_URI.insert(0, p_locationBlock.root);
 
+    if (p_locationBlock.is_CGI == true)
+    {
+        // Handle_CGI;
+    }
+
     if (access(actual_URI.c_str(), F_OK) != 0)
         this->response_Error(404, true);
     
@@ -123,7 +128,14 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock)
 
 void Client::handle_POST(MyLocationBlock &p_locationBlock)
 {
-    (void)p_locationBlock;
+    if (p_locationBlock.is_CGI == true)
+    {
+        std::string actual_URI(this->m_request.m_URI);
+        actual_URI.erase(0, 1);
+        actual_URI.insert(0, p_locationBlock.root);
+        
+        // Handle_CGI;
+    }
 
     const std::vector<std::string> *content_type = find_Value_inMap(this->m_request.m_headers, "Content-Type");
 

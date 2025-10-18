@@ -5,7 +5,7 @@ namespace www {
     #define True 21
     typedef int fd_t;
     
-    #define MAX_EVENTS 1024
+    #define MAX_EVENTS 32
     #define MAX_CONNECTIONS 1024
 
     #define ReadingSize 70656
@@ -27,4 +27,6 @@ namespace www {
     extern const std::string MAGENTA;
     extern const std::string CYAN;
     extern const std::string RESET;
+
+    extern bool SHUTDOWN;
 }

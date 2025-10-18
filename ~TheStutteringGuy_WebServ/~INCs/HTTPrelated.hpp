@@ -4,6 +4,8 @@
 #include "Namespaces.hpp"
 #include "HTTPconst.hpp"
 #include <cstddef>
+#include <unistd.h>
+#include <vector>
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // ServerBlock :
@@ -242,14 +244,47 @@ private:
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Singletons :
 
-struct ValuesSingleton
+struct CGIs
 {
-    std::vector<addrinfo* >           addrinfo_vect;
+};
+
+class CGIManagerSingleton
+{
+public:
+    std::vector<www::fd_t>  _CGIfds_map;
+    www::fd_t               CGIfd;
+    pid_t                   client_fd;
+    size_t                  timeout;
+
+private:
+    CGIManagerSingleton();
+    // CGIManagerSingleton(const CGIManagerSingleton& other);
+    // CGIManagerSingleton& operator=(const CGIManagerSingleton& other);
+
+public:
+
+    static CGIManagerSingleton& getCGIManagerSingleton()
+    {
+        static CGIManagerSingleton Singleton;
+        return Singleton;
+    }
+};
+
+
+class ValuesSingleton
+{
+private:
+    ValuesSingleton();
+    // ValuesSingleton(const ValuesSingleton& other);
+    // ValuesSingleton& operator=(const ValuesSingleton& other);
+
+public:
+    std::vector<addrinfo* >         addrinfo_vect;
     www::fd_t                       epoll_fd;
     std::vector<MyServerBlock>      servers_blocks;
 
-    std::map<www::fd_t, MyServerBlock>    _serverfd_map;
-    std::map <www::fd_t, Client>          _clients_map;
+    std::map<www::fd_t, MyServerBlock>      _serverfd_map;
+    std::map <www::fd_t, Client>            _clients_map;
 
     struct HTTPstatus_phrase        m_HTTPstatus_phrase;
     struct FileContent_type         m_FileContent_type;

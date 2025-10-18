@@ -1,5 +1,4 @@
 #include "WebServer.hpp"
-#include <netdb.h>
 
 const std::string www::Allowed_Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .-_~:/?#[]@!$&'()*+,;=%";
 const std::string www::RED = "\033[31m";
@@ -10,13 +9,9 @@ const std::string www::MAGENTA = "\033[35m";
 const std::string www::CYAN = "\033[36m";
 const std::string www::RESET = "\033[0m";
 
-void handle_sig(int)
-{
-    struct ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
+bool www::SHUTDOWN = false;
 
-    for (size_t index = 0; index < cleanup.addrinfo_vect.size(); ++index)
-        freeaddrinfo(cleanup.addrinfo_vect[index]);
-}
+void handle_sig(int) { www::SHUTDOWN = true; }
 
 void Print_Infos(void)
 {
@@ -119,7 +114,7 @@ int API::Webserver(void)
         }
         Print_Infos();
         Print_generic_Rules();
-        while (True)
+        while (www::SHUTDOWN == false)
         {
             try
             {
@@ -127,8 +122,11 @@ int API::Webserver(void)
             }
             catch(const std::logic_error &e)
             {
-                std::cerr << www::MAGENTA << "[FATAL] : " << e.what() << www::RESET << std::endl;
-                return 1;
+                throw e;
+            }
+            catch(const bool&)
+            {
+                break;
             }
             catch(...) {}
         }
@@ -136,8 +134,12 @@ int API::Webserver(void)
     catch (std::logic_error &e)
     {
         std::cerr << www::MAGENTA << "[FATAL] : " << e.what() << www::RESET << std::endl;
-        return 1;
     }
     catch (...) {}
+
+    struct ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
+
+    for (size_t index = 0; index < cleanup.addrinfo_vect.size(); ++index)
+        freeaddrinfo(cleanup.addrinfo_vect[index]);
     return 0;
 }

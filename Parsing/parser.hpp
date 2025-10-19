@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.hpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ahmed <ahmed@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/26 16:11:52 by aahlaqqa          #+#    #+#             */
-/*   Updated: 2025/10/08 15:48:36 by ahmed            ###   ########.fr       */
+/*   Updated: 2025/10/19 20:49:30 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,8 +47,7 @@ struct LocationBlock
     std::vector<std::string> allowed_methods;
     bool autoindex;
     std::map<int,std::string> redirect_url;
-    std::string cgi_path;
-    std::vector<std::string> cgi_extention;
+    std::map<std::string, std::string> cgi;
     bool is_redirection;
     bool is_cgi;
 };
@@ -146,6 +145,11 @@ public:
         virtual const char *what() const throw();
     };
 
+    class InvalidCgi : public std::exception
+    {
+        virtual const char *what() const throw();
+    };
+    
     enum Lexical
     {
         LISTEN,
@@ -154,8 +158,7 @@ public:
         ROOT,
         INDEX,
         ERROR,
-        CGI_PATH,
-        CGI_EX,
+        CGI,
         LOCATION,
         METHODS,
         AUTOINDEX,

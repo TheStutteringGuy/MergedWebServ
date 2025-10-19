@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser.cpp                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: ahmed <ahmed@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/04 20:41:13 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/08 15:20:52 by ahmed            ###   ########.fr       */
+/*   Updated: 2025/10/19 20:49:50 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,11 @@ const char *Parser::InvalidMthode::what() const throw()
     return "Invalid HTTP methode !!";
 };
 
+const char *Parser::InvalidCgi::what() const throw()
+{
+    return "Invalid CGI methode !!";
+};
+
 std::vector<ServerBlock> &Parser::getServerBlock()
 {
     return (server_blocks);
@@ -146,8 +151,7 @@ const std::map<std::string, Parser::Lexical> &Parser::get_token()
         tokens["allow_methods"] = Parser::METHODS;
         tokens["autoindex"] = Parser::AUTOINDEX;
         tokens["return"] = Parser::RETURN;
-        tokens["cgi_path"] = Parser::CGI_PATH;
-        tokens["cgi_ext"] = Parser::CGI_EX;
+        tokens["cgi_path"] = Parser::CGI;
         tokens["client_max_body_size"] = Parser::CLIENT_MAX_BODY_SIZE;    }
     return (tokens);
 };
@@ -283,8 +287,7 @@ void Parser::validatConfig() const
     validDirectives.insert("allow_methods");
     validDirectives.insert("autoindex");
     validDirectives.insert("return");
-    validDirectives.insert("cgi_path");
-    validDirectives.insert("cgi_ext");
+    validDirectives.insert("cgi");
     validDirectives.insert("client_max_body_size");
     
     for (size_t i = 0; i < server_blocks.size(); i++)

@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:24 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/14 16:56:32 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/10/19 20:51:24 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,7 +48,7 @@ const char *ConfigProcessor::InvalidClientBodySize::what() const throw()
 
 const char *ConfigProcessor::InvalidReturnCode::what() const throw()
 {
-  return "Invalid return code !";  
+    return "Invalid return code !";
 };
 
 void ConfigProcessor::processServerBlock(std::vector<ServerBlock> &blocks)
@@ -214,35 +214,26 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
                 url = dir.values[1];
                 location.redirect_url[code] = url;
             }
-            // else if (dir.values.size() == 1)
-            // {
-            //     location.is_redirection = true;
-            //     if (is_Num(dir.values[0]))
-            //     {
-            //         int code;
-            //         code = std::atoi(dir.values[0].c_str());
-            //         location.redirect_url[code] = "";
-            //     }
-            //     else
-            //     {
-            //         location.redirect_url[302] = dir.values[0];
-            //     }
-            // }
             else
             {
                 throw ConfigProcessor::InvalidReturnCode();
             }
         }
-        else if (dir.name == "cgi_path")
+        else if (dir.name == "cgi")
         {
-            location.is_cgi = true;
-            if (!dir.values.empty())
-                location.cgi_path = dir.values[0];
-        }
-        else if (dir.name == "cgi_ext")
-        {
-            location.is_cgi = true;
-            location.cgi_extention = dir.values;
+            if (dir.values.size() >= 2)
+            {
+                location.is_cgi = true;
+                std::string extention;
+                std::string path;
+                extention = dir.values[0];
+                path = dir.values[1];
+                location.cgi[extention] = path;
+            }
+            else
+            {
+                throw Parser::InvalidCgi();
+            }
         }
     }
 };

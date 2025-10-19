@@ -246,23 +246,23 @@ private:
 
 struct CGIs
 {
+    www::fd_t               CGIfd;
+    pid_t                   client_fd;
+    size_t                  timeout;
 };
 
 class CGIManagerSingleton
 {
 public:
     std::vector<www::fd_t>  _CGIfds_map;
-    www::fd_t               CGIfd;
-    pid_t                   client_fd;
-    size_t                  timeout;
+    std::vector<CGIs> CGIsVector;
 
 private:
-    CGIManagerSingleton();
+    CGIManagerSingleton() {};
     // CGIManagerSingleton(const CGIManagerSingleton& other);
     // CGIManagerSingleton& operator=(const CGIManagerSingleton& other);
 
 public:
-
     static CGIManagerSingleton& getCGIManagerSingleton()
     {
         static CGIManagerSingleton Singleton;
@@ -274,7 +274,7 @@ public:
 class ValuesSingleton
 {
 private:
-    ValuesSingleton();
+    ValuesSingleton() {};
     // ValuesSingleton(const ValuesSingleton& other);
     // ValuesSingleton& operator=(const ValuesSingleton& other);
 

@@ -1,6 +1,8 @@
 #include "WebServer.hpp"
 #include <algorithm>
+#include <sys/socket.h>
 #include <unistd.h>
+#include <deque>
 
 static std::string getParentPath(const std::string& filepath)
 {
@@ -45,11 +47,6 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock)
     std::string actual_URI(this->m_request.m_URI);
     actual_URI.erase(0, 1);
     actual_URI.insert(0, p_locationBlock.root);
-
-    if (p_locationBlock.is_CGI == true)
-    {
-        // Handle_CGI;
-    }
 
     if (access(actual_URI.c_str(), F_OK) != 0)
         this->response_Error(404, true);
@@ -128,14 +125,7 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock)
 
 void Client::handle_POST(MyLocationBlock &p_locationBlock)
 {
-    if (p_locationBlock.is_CGI == true)
-    {
-        std::string actual_URI(this->m_request.m_URI);
-        actual_URI.erase(0, 1);
-        actual_URI.insert(0, p_locationBlock.root);
-        
-        // Handle_CGI;
-    }
+    (void)p_locationBlock;
 
     const std::vector<std::string> *content_type = find_Value_inMap(this->m_request.m_headers, "Content-Type");
 
@@ -226,20 +216,60 @@ void Client::handle_Request(void)
     if (tmp_locationBlock.root.empty())
         tmp_locationBlock.root = this->m_Myserver.m_root;
 
+    bool get(false), post(false);
+
     if (this->m_request.m_method == "GET")
     {
         if (std::find(tmp_allowedMethods.begin(), tmp_allowedMethods.end(), "GET") != tmp_allowedMethods.end())
-            this->handle_GET(tmp_locationBlock);
+            get = true;
         else
             this->response_Error(405, true);
     }    
     else if (this->m_request.m_method == "POST")
     {
         if (std::find(tmp_allowedMethods.begin(), tmp_allowedMethods.end(), "POST") != tmp_allowedMethods.end())
-            this->handle_POST(tmp_locationBlock);
+            post = true;
         else
             this->response_Error(405, true);
-    }    
+    }
+
+    if (tmp_locationBlock.is_CGI == true)
+    {   
+        // Handle_CGI;
+        std::string actual_URI(this->m_request.m_URI);
+        actual_URI.erase(0, 1);
+        actual_URI.insert(0, tmp_locationBlock.root);
+        
+        www::fd_t sv[2];
+
+        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1)
+        {
+            std::cerr << "socketpair() " + static_cast<std::string>(strerror(errno)) << std::endl;
+            this->response_Error(500, true);
+        }
+        
+        CGIManagerSingleton &CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
+
+        CGImanager.CGIsVector.push_back(CGIs());
+        CGIs &obj = CGImanager.CGIsVector.back();
+
+        close (sv[1]);
+        obj.CGIfd = sv[0];
+        obj.client_fd = this->m_client_fd;
+        obj.timeout = getTime();
+
+        //  pid_t childProcess = YourFunciton(&sv, &filename, &Structs_Classes) will return to me the pid of the child process
+        //  nta 3atclosi sv[0] to 3atktb f sv[1] (hadi fhal pipe)
+        //  o ay data b8itiha nsardalek
+        //  o 3ata5od BODY fhalat kan POST
+
+        throw CONTINUE;
+    }
+
+    if (get == true)
+            this->handle_GET(tmp_locationBlock);   
+    else if (post == true)
+            this->handle_POST(tmp_locationBlock);  
     else if (this->m_request.m_method == "DELETE")
     {
         if (std::find(tmp_allowedMethods.begin(), tmp_allowedMethods.end(), "DELETE") != tmp_allowedMethods.end())

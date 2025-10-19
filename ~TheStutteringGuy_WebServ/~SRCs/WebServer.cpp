@@ -10,7 +10,6 @@ const std::string www::CYAN = "\033[36m";
 const std::string www::RESET = "\033[0m";
 
 bool www::SHUTDOWN = false;
-
 void handle_sig(int) { www::SHUTDOWN = true; }
 
 void Print_Infos(void)
@@ -137,7 +136,7 @@ int API::Webserver(void)
     }
     catch (...) {}
 
-    struct ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
+    class ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
 
     for (size_t index = 0; index < cleanup.addrinfo_vect.size(); ++index)
         freeaddrinfo(cleanup.addrinfo_vect[index]);

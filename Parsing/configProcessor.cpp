@@ -214,21 +214,20 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
                 url = dir.values[1];
                 location.redirect_url[code] = url;
             }
-            else if (dir.values.size() == 1)
-            {
-                location.is_redirection = true;
-                if (is_Num(dir.values[0]))
-                {
-
-                    int code;
-                    code = std::atoi(dir.values[0].c_str());
-                    location.redirect_url[code] = "";
-                }
-                else
-                {
-                    location.redirect_url[302] = dir.values[0];
-                }
-            }
+            // else if (dir.values.size() == 1)
+            // {
+            //     location.is_redirection = true;
+            //     if (is_Num(dir.values[0]))
+            //     {
+            //         int code;
+            //         code = std::atoi(dir.values[0].c_str());
+            //         location.redirect_url[code] = "";
+            //     }
+            //     else
+            //     {
+            //         location.redirect_url[302] = dir.values[0];
+            //     }
+            // }
             else
             {
                 throw ConfigProcessor::InvalidReturnCode();

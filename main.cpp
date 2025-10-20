@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/02 17:50:13 by aahlaqqa          #+#    #+#             */
-/*   Updated: 2025/08/01 19:40:25 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/10/20 11:27:01 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,6 @@ int main(int argc, char **argv)
         parser.parsConfig();
         parser.validatConfig();
 
-        parser.printConfig();
         std::vector<ServerBlock> servers_blocks = parser.getServerBlock();
         processor.processServerBlock(servers_blocks);
 

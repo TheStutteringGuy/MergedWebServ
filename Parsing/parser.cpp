@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/04 20:41:13 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/19 20:49:50 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/10/20 11:26:49 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -207,7 +207,7 @@ void Parser::parsConfig()
         if (lexical_vector[i].second == SERVER)
         {
             i++;
-            server_blocks.push_back(parsServerBlock(i)); // contain the whole servers
+            server_blocks.push_back(parsServerBlock(i));
         }
         else
             throw ServerError();
@@ -335,41 +335,4 @@ void Parser::validatConfig() const
             }
         }
     }
-};
-
-// this one for printing from chatgpt
-void Parser::printConfig()
-{
-    // for (size_t s = 0; s < server_blocks.size(); ++s)
-    // {
-    //     std::cout << "Server Block:\n";
-
-    //     // Print top-level directives
-    //     for (size_t d = 0; d < server_blocks[s].directives.size(); ++d)
-    //     {
-    //         const Directive &dir = server_blocks[s].directives[d];
-    //         std::cout << "  Directive: " << dir.name;
-    //         for (size_t v = 0; v < dir.values.size(); ++v)
-    //             std::cout << " " << dir.values[v];
-    //         std::cout << std::endl;
-    //     }
-
-    //     // Print location blocks
-    //     for (size_t l = 0; l < server_blocks[s].locationBlocks.size(); ++l)
-    //     {
-    //         const LocationBlock &loc = server_blocks[s].locationBlocks[l];
-    //         std::cout << "  Location: " << loc.path << "\n";
-
-    //         for (size_t d = 0; d < loc.directives.size(); ++d)
-    //         {
-    //             const Directive &dir = loc.directives[d];
-    //             std::cout << "    Directive: " << dir.name;
-    //             for (size_t v = 0; v < dir.values.size(); ++v)
-    //                 std::cout << " " << dir.values[v];
-    //             std::cout << std::endl;
-    //         }
-    //     }
-
-    //     std::cout << std::endl;
-    // }
 };

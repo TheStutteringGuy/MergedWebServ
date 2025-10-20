@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:24 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/19 20:51:24 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/10/20 11:29:10 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -240,48 +240,22 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
 
 void ConfigProcessor::validateConfig(const std::vector<ServerBlock> &blocks)
 {
-    // validatePort(blocks);
     validatePath(blocks);
 };
-
-// void ConfigProcessor::validatePort(const std::vector<ServerBlock> &blocks)
-// {
-//     std::set<int> nonused_port;
-//     for (size_t i = 0; i < blocks.size(); i++)
-//     {
-//         if (!isValidPort(blocks[i].port))
-//             throw InvalidPortException();
-//         if (nonused_port.find(blocks[i].port) != nonused_port.end())
-//             throw DuplicatePortEXception();
-//         nonused_port.insert(blocks[i].port);
-//     }
-// };
 
 void ConfigProcessor::validatePath(const std::vector<ServerBlock> &blocks)
 {
     for (size_t i = 0; i < blocks.size(); i++)
     {
         const ServerBlock &server = blocks[i];
-        // std::cout << "Checking server root: " << server.root << std::endl;
         if (!existDirectory(server.root))
         {
             std::cout << "ERROR: Server root directory does not exist: " << server.root << std::endl;
             throw InvalidPathException();
         }
-        // for (std::map<int, std::string>::const_iterator it = server.error_pages.begin(); it != server.error_pages.end(); it++)
-        // {
-        //     std::string fullPath = handlePath(server.root, it->second);
-        //     if (!existFile(fullPath))
-        //     {
-        //         std::cout << "ERROR: Error page file does not exist: " << fullPath << std::endl;
-        //         throw InvalidPathException();
-        //     }
-        // }
         for (size_t j = 0; j < server.locationBlocks.size(); j++)
         {
             const LocationBlock &location = server.locationBlocks[j];
-            // std::cout << "Checking location root: " << location.root << std::endl;
-
             if (!existDirectory(location.root))
             {
                 std::cout << "ERROR: Location root directory does not exist: " << location.root << std::endl;
@@ -300,9 +274,9 @@ void ConfigProcessor::setDefaultValue(ServerBlock &server)
 void ConfigProcessor::setLocation(LocationBlock &location, const ServerBlock &server)
 {
     if (location.root.empty())
-        location.root = server.root; // here if the root of the location block is empty i inherit it from the serever root
+        location.root = server.root;
     if (location.index.empty())
-        location.index = server.index; // the same thing here too
+        location.index = server.index;
     if (location.allowed_methods.empty())
     {
         location.allowed_methods.push_back("GET");
@@ -321,18 +295,6 @@ int ConfigProcessor::stringToInt(const std::string &str)
         throw InvalidDirectiveException();
     return (res);
 };
-
-// bool ConfigProcessor::isValidPort(int port)
-// {
-//     if (port > 0 && port <= 65535)
-//         return (true);
-//     else
-//         return (false);
-
-//     // 1-1023: Well-known ports for example :  (HTTP=80, HTTPS=443, SSH=22 ...)
-//     // 1024-49151: Registered ports
-//     // 49152-65535: Dynamic/private ports
-// };
 
 bool ConfigProcessor::existFile(const std::string &path)
 {
@@ -359,12 +321,12 @@ bool ConfigProcessor::existDirectory(const std::string &path)
 std::string ConfigProcessor::handlePath(const std::string &base, const std::string &path)
 {
     if (path.empty())
-        return (base); // return base directory if path is empty
+        return (base);
     if (path[0] == '/')
-        return (path); // return the absolute path
+        return (path);
     std::string res = base;
     if (!res.empty() && res[res.length() - 1] != '/')
         res += "/";
     res += path;
-    return (res); // return the full path after combination
+    return (res);
 };

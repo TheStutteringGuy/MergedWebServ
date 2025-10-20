@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/26 16:11:52 by aahlaqqa          #+#    #+#             */
-/*   Updated: 2025/10/19 20:49:30 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/10/20 11:29:44 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -30,8 +30,8 @@
 
 struct Directive
 {
-    std::string name;  // ex: listen
-    std::vector<std::string> values; // ex: 8080
+    std::string name;
+    std::vector<std::string> values;
 };
 
 struct LocationBlock

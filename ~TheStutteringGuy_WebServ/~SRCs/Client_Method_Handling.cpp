@@ -15,15 +15,11 @@ static std::string getParentPath(const std::string& filepath)
     return parent_path;
 }
 
-void Client::handle_DELETE(MyLocationBlock &p_locationBlock)
+void Client::handle_DELETE(MyLocationBlock &p_locationBlock, const std::string& actual_URI)
 {
     struct stat test;
 
     (void)p_locationBlock;
-
-    std::string actual_URI(this->m_request.m_URI);
-    actual_URI.erase(0, 1);
-    actual_URI.insert(0, p_locationBlock.root);
 
     if (access(actual_URI.c_str(), F_OK) != 0)
         this->response_Error(404, true);
@@ -40,13 +36,9 @@ void Client::handle_DELETE(MyLocationBlock &p_locationBlock)
     this->response_justAstatus(204);
 }
 
-void Client::handle_GET(MyLocationBlock &p_locationBlock)
+void Client::handle_GET(MyLocationBlock &p_locationBlock, std::string& actual_URI)
 {
     struct stat test;
-    
-    std::string actual_URI(this->m_request.m_URI);
-    actual_URI.erase(0, 1);
-    actual_URI.insert(0, p_locationBlock.root);
 
     if (access(actual_URI.c_str(), F_OK) != 0)
         this->response_Error(404, true);
@@ -68,7 +60,7 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock)
                 this->m_request.m_URI.append("/");
                 actual_URI.append("/");
             }
-    
+
             if (access(actual_URI.c_str(), R_OK | X_OK) != 0)
                 this->response_Error(403, true);
     
@@ -167,32 +159,39 @@ void Client::handle_Request(void)
 {
     this->handling_request = true;
     std::string tmp_location;
+    std::string uri(this->m_request.m_URI);
 
-    while (True)
+    while (true)
     {
-        if (this->m_Myserver.m_locationBlocks.find(this->m_request.m_URI) != this->m_Myserver.m_locationBlocks.end())
+        // Check if the current URI matches any location block
+        if (this->m_Myserver.m_locationBlocks.find(uri) != this->m_Myserver.m_locationBlocks.end())
         {
-            tmp_location = this->m_request.m_URI;
+            tmp_location = uri;
             break;
         }
 
-        std::string tmp;
-        size_t pos = this->m_request.m_URI.find_last_of("/");
-        if (pos != std::string::npos)
-            tmp = this->m_request.m_URI.substr(0, pos);
+        if (uri == "/" || uri.empty())
+            this->response_Error(404, true);
 
-        if (tmp.empty()) { tmp = "/"; }
-        if (this->m_Myserver.m_locationBlocks.find(tmp) != this->m_Myserver.m_locationBlocks.end())
-        {
-            tmp_location = tmp;
-            break;
-        }
-
-        this->response_Error(404, true);
+        size_t pos = uri.find_last_of("/");
+        if (pos == 0)
+            uri = "/";
+        else if (pos != std::string::npos)
+            uri = uri.substr(0, pos);
     }
 
     MyLocationBlock &tmp_locationBlock = this->m_Myserver.m_locationBlocks[tmp_location];
-    
+    std::vector<std::string> &tmp_allowedMethods = tmp_locationBlock.allowed_methods;
+    if (tmp_locationBlock.root.empty())
+        tmp_locationBlock.root = this->m_Myserver.m_root;
+
+    std::string actual_URI(this->m_request.m_URI);
+    size_t pos = actual_URI.find(tmp_location);
+    actual_URI.replace(pos, tmp_location.size(), tmp_locationBlock.root);
+
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
+
     if (tmp_locationBlock.is_Red == true)
     {
         std::map<int, std::string>::iterator first = tmp_locationBlock.redirection.begin();
@@ -212,10 +211,6 @@ void Client::handle_Request(void)
         throw CONTINUE;
     }
 
-    std::vector<std::string> &tmp_allowedMethods = tmp_locationBlock.allowed_methods;
-    if (tmp_locationBlock.root.empty())
-        tmp_locationBlock.root = this->m_Myserver.m_root;
-
     bool get(false), post(false);
 
     if (this->m_request.m_method == "GET")
@@ -233,15 +228,19 @@ void Client::handle_Request(void)
             this->response_Error(405, true);
     }
 
-    if (tmp_locationBlock.is_CGI == true)
+    while(tmp_locationBlock.is_CGI == true)
     {   
-        // Handle_CGI;
-        std::string actual_URI(this->m_request.m_URI);
-        actual_URI.erase(0, 1);
-        actual_URI.insert(0, tmp_locationBlock.root);
-        
-        www::fd_t sv[2];
+        std::cout << "CGI Case" << std::endl;
+        size_t pos = actual_URI.find_last_of(".");
+        if (pos == std::string::npos)
+            break;
+        else
+        {
+            std::string extension = actual_URI.substr(pos);
+            std::cout << extension << std::endl;
+        }
 
+        www::fd_t sv[2];
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1)
         {
             std::cerr << "socketpair() " + static_cast<std::string>(strerror(errno)) << std::endl;
@@ -267,13 +266,13 @@ void Client::handle_Request(void)
     }
 
     if (get == true)
-            this->handle_GET(tmp_locationBlock);   
+            this->handle_GET(tmp_locationBlock, actual_URI);   
     else if (post == true)
             this->handle_POST(tmp_locationBlock);  
     else if (this->m_request.m_method == "DELETE")
     {
         if (std::find(tmp_allowedMethods.begin(), tmp_allowedMethods.end(), "DELETE") != tmp_allowedMethods.end())
-            this->handle_DELETE(tmp_locationBlock);
+            this->handle_DELETE(tmp_locationBlock, actual_URI);
         else
             this->response_Error(405, true);
     }

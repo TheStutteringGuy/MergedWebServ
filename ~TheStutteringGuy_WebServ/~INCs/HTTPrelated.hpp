@@ -26,8 +26,9 @@ struct MyLocationBlock
     std::map<int, std::string> redirection;
 
     bool is_CGI;
-    // std::string cgi_path;
-    // std::vector<std::string> cgi_extention;
+    std::map<std::string, std::string> cgi_infos;
+
+    std::string actual_URI;
 };
 
 struct MyServerBlock
@@ -233,9 +234,9 @@ public:
     void            handle_Response(void);
 
 private:
-    void            handle_GET(MyLocationBlock &p_locationBlock);
+    void            handle_GET(MyLocationBlock &p_locationBlock, std::string& actual_URI);
     void            handle_POST(MyLocationBlock &p_locationBlock);
-    void            handle_DELETE(MyLocationBlock &p_locationBlock);
+    void            handle_DELETE(MyLocationBlock &p_locationBlock, const std::string& actual_URI);
     void            response_Get(const std::string& File);
     void            response_justAstatus(const unsigned int &status_code);
     void            response_Creator(const unsigned int &status_code, const bool& content_needed, const std::string& content_type, const std::string &body);

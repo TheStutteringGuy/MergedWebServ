@@ -20,7 +20,7 @@ Parser::~Parser() {
 
 };
 
-LocationBlock::LocationBlock() : autoindex(false) {};
+LocationBlock::LocationBlock() : autoindex(false), is_redirection(false), is_cgi(false) {};
 
 LocationBlock::~LocationBlock() {};
 

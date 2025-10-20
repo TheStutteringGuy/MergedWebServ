@@ -46,8 +46,7 @@ static std::map<std::string, MyLocationBlock> handle_LocationBlocks(std::vector<
         tmp[locationBlocks[index].path].is_Red = locationBlocks[index].is_redirection;
         tmp[locationBlocks[index].path].redirection = locationBlocks[index].redirect_url;
         tmp[locationBlocks[index].path].is_CGI = locationBlocks[index].is_cgi;
-        // tmp[locationBlocks[index].path].cgi_path = locationBlocks[index].cgi_path;
-        // tmp[locationBlocks[index].path].cgi_extention = locationBlocks[index].cgi_extention;
+        tmp[locationBlocks[index].path].cgi_infos = locationBlocks[index].cgi;
     }
     return tmp;
 }

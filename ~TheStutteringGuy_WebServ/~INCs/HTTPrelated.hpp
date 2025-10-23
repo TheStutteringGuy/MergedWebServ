@@ -215,7 +215,7 @@ public:
             if (!m_response_asFile->is_open())
                 throw std::runtime_error("m_body_asFile.isopem()");
             m_response_asFile_init = true;
-        }
+        } 
     }
 
 public:

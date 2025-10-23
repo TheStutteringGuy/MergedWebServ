@@ -84,7 +84,7 @@ void Client::headers_parser()
         ss << request_line;
         ss >> _client.m_request.m_method >> _client.m_request.m_URI >> _client.m_request.m_version;
 
-        if (_client.m_request.m_method.empty() || _client.m_request.m_URI.empty() || _client.m_request.m_URI.empty())
+        if (_client.m_request.m_method.empty() || _client.m_request.m_URI.empty() || _client.m_request.m_version.empty())
             _client.response_Error(400, true);
 
         if (_client.m_request.m_method != "GET" && _client.m_request.m_method != "POST" && _client.m_request.m_method != "DELETE")

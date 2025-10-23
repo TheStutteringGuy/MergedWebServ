@@ -1,5 +1,4 @@
 #include "WebServer.hpp"
-#include <cerrno>
 
 #define TIMEOUT_SEC 30000000
 

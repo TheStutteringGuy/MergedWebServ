@@ -229,8 +229,7 @@ void Client::handle_Request(void)
     }
 
     while(tmp_locationBlock.is_CGI == true)
-    {   
-        std::cout << "CGI Case" << std::endl;
+    {
         size_t pos = actual_URI.find_last_of(".");
         if (pos == std::string::npos)
             break;
@@ -257,11 +256,14 @@ void Client::handle_Request(void)
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
 
-        //  pid_t childProcess = YourFunciton(&sv, &filename, &Structs_Classes) will return to me the pid of the child process
-        //  nta 3atclosi sv[0] to 3atktb f sv[1] (hadi fhal pipe)
-        //  o ay data b8itiha nsardalek
-        //  o 3ata5od BODY fhalat kan POST
-
+        obj.CGIpid= this->Handle_CGI(actual_URI, &sv[2]);
+        epoll_event event;
+        event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
+        event.data.fd = obj.CGIfd;
+        if (epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_ADD, obj.CGIfd, &event) == -1)
+            throw std::logic_error("epoll_ctl() " + static_cast<std::string>(strerror(errno)));
+        CGImanager._CGIfds_map.push_back(obj.CGIfd);
+    
         throw CONTINUE;
     }
 

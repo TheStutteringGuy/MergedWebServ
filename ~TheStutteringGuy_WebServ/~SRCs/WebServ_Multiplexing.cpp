@@ -70,7 +70,10 @@ void multiplexer(void)
         {
             if (std::find(_CGIfds_map.begin(), _CGIfds_map.end(), events[index].data.fd) != _CGIfds_map.end())
             {
-                // handleCGI_LOGIC;
+                // Handle CGI :
+
+                char buffer[ReadingSize];
+                memset(buffer, 0, sizeof(buffer));
             }
 
             if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)

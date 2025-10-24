@@ -239,7 +239,8 @@ private:
     void            handle_DELETE(MyLocationBlock &p_locationBlock, const std::string& actual_URI);
     void            response_Get(const std::string& File);
     void            response_justAstatus(const unsigned int &status_code);
-    void            response_Creator(const unsigned int &status_code, const bool& content_needed, const std::string& content_type, const std::string &body);
+private:
+    pid_t           Handle_CGI(const std::string& actual_URI, www::fd_t *sv);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -249,6 +250,7 @@ struct CGIs
 {
     www::fd_t               CGIfd;
     pid_t                   client_fd;
+    pid_t                   CGIpid;
     size_t                  timeout;
 };
 

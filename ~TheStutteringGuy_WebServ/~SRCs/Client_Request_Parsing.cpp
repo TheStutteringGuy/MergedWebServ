@@ -189,7 +189,7 @@ bool Client::body_checker()
         
         std::streampos current_pos = this->m_body_asFile->tellg();
         this->m_body_asFile->seekg(0, std::ios::end);
-        size_t size = this->m_body_asFile->tellg();
+        size_t size = this->m_body_asFile->tellg(); 
 
         if (size < l_content_length)
         {

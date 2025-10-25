@@ -235,8 +235,9 @@ void Client::handle_Request(void)
 
         if (pos == std::string::npos)
             break;
+
         std::string extension = actual_URI.substr(pos);
-        if (std::find(tmp_locationBlock.cgi_infos.begin(), tmp_locationBlock.cgi_infos.end(), extension) == tmp_locationBlock.cgi_infos.end())
+        if (tmp_locationBlock.cgi_infos.find(extension) == tmp_locationBlock.cgi_infos.end())
             break;
         else
             bin = tmp_locationBlock.cgi_infos[extension];
@@ -247,7 +248,7 @@ void Client::handle_Request(void)
             std::cerr << "socketpair() " + static_cast<std::string>(strerror(errno)) << std::endl;
             this->response_Error(500, true);
         }
-        
+
         CGIManagerSingleton &CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
 
         CGImanager.CGIsVector.push_back(CGIs());

@@ -2,6 +2,7 @@
 
 pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv)
 {
+
     pid_t pid;
     pid = fork();
     if (pid == -1)
@@ -24,13 +25,14 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
             env_p.push_back(const_cast<char *>(env_strings[i].c_str()));
         env_p.push_back(NULL);
         char *const *envp = env_p.data();
-        char *const argv[] = {const_cast<char *>(actual_URI.c_str()), NULL};
+        char *const argv[] = {const_cast<char *>(bin.c_str()), const_cast<char *>(actual_URI.c_str()), NULL};
 
-        if (execve(actual_URI.c_str(), argv, envp) == -1)
+        if (execve(bin.c_str(), argv, envp) == -1)
         {
             std::cerr << "execve() failed for CGI: " + static_cast<std::string>(strerror(errno)) << std::endl;
             std::exit(127);
         }
+        std::exit(0);
         return 0;
     }
     else

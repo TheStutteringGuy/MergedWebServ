@@ -82,7 +82,7 @@ void multiplexer(void)
                 char buffer[ReadingSize];
                 memset(buffer, 0, sizeof(buffer));
 
-                size_t read_bytes = recv(events[index].data.fd, buffer, sizeof(buffer), MSG_DONTWAIT);
+                ssize_t read_bytes = recv(events[index].data.fd, buffer, sizeof(buffer), MSG_DONTWAIT);
                 if (read_bytes == -1)
                 {
                     close(CGItohandle->CGIfd);

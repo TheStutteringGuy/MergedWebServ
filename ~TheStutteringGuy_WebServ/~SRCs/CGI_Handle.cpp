@@ -1,6 +1,6 @@
 #include "WebServer.hpp"
 
-pid_t Client::Handle_CGI(const std::string& actual_URI, www::fd_t *sv)
+pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv)
 {
     pid_t pid;
     pid = fork();
@@ -31,6 +31,7 @@ pid_t Client::Handle_CGI(const std::string& actual_URI, www::fd_t *sv)
             std::cerr << "execve() failed for CGI: " + static_cast<std::string>(strerror(errno)) << std::endl;
             std::exit(127);
         }
+        return 0;
     }
     else
         return pid;

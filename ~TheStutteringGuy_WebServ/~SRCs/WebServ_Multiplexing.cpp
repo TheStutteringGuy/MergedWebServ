@@ -1,4 +1,8 @@
 #include "WebServer.hpp"
+#include <csignal>
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <unistd.h>
 
 #define TIMEOUT_SEC 30000000
 
@@ -72,8 +76,24 @@ void multiplexer(void)
             {
                 // Handle CGI :
 
+                CGIs* CGItohandle = CGIManagerSingleton::findCGIstructInVector(events[index].data.fd);
+                Client& _client = client_map[CGItohandle->client_fd];
+
                 char buffer[ReadingSize];
                 memset(buffer, 0, sizeof(buffer));
+
+                size_t read_bytes = recv(events[index].data.fd, buffer, sizeof(buffer), MSG_DONTWAIT);
+                if (read_bytes == -1)
+                {
+                    close(CGItohandle->CGIfd);
+                    epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, CGItohandle->CGIfd, NULL);
+                    kill(CGItohandle->CGIpid, SIGKILL);
+                    _client.response_Error(500, true);
+                }
+                if (read_bytes > 0)
+                    ;
+                if (read_bytes == 0)
+                    ;
             }
 
             if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)

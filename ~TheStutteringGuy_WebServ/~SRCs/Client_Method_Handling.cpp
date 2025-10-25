@@ -230,14 +230,16 @@ void Client::handle_Request(void)
 
     while(tmp_locationBlock.is_CGI == true)
     {
+        std::string bin;
         size_t pos = actual_URI.find_last_of(".");
+
         if (pos == std::string::npos)
             break;
+        std::string extension = actual_URI.substr(pos);
+        if (std::find(tmp_locationBlock.cgi_infos.begin(), tmp_locationBlock.cgi_infos.end(), extension) == tmp_locationBlock.cgi_infos.end())
+            break;
         else
-        {
-            std::string extension = actual_URI.substr(pos);
-            std::cout << extension << std::endl;
-        }
+            bin = tmp_locationBlock.cgi_infos[extension];
 
         www::fd_t sv[2];
         if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1)
@@ -256,7 +258,7 @@ void Client::handle_Request(void)
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
 
-        obj.CGIpid= this->Handle_CGI(actual_URI, &sv[2]);
+        obj.CGIpid= this->Handle_CGI(bin, actual_URI, &sv[2]);
         epoll_event event;
         event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
         event.data.fd = obj.CGIfd;

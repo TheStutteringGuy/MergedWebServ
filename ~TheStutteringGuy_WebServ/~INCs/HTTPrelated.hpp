@@ -240,7 +240,7 @@ private:
     void            response_Get(const std::string& File);
     void            response_justAstatus(const unsigned int &status_code);
 private:
-    pid_t           Handle_CGI(const std::string& actual_URI, www::fd_t *sv);
+    pid_t           Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv);
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,6 +270,18 @@ public:
     {
         static CGIManagerSingleton Singleton;
         return Singleton;
+    }
+
+    static CGIs* findCGIstructInVector(www::fd_t &val)
+    {
+        CGIManagerSingleton Singleton = CGIManagerSingleton::getCGIManagerSingleton();
+        
+        for (std::vector<CGIs>::iterator it = Singleton.CGIsVector.begin(); it != Singleton.CGIsVector.end(); ++it)
+        {
+            if (it->CGIfd == val)
+                return &(*it);
+        }
+        return NULL;
     }
 };
 

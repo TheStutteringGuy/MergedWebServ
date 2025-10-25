@@ -251,6 +251,7 @@ struct CGIs
     www::fd_t               CGIfd;
     pid_t                   client_fd;
     pid_t                   CGIpid;
+    bool                    Header_sent;
     size_t                  timeout;
 };
 

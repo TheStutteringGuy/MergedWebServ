@@ -1,5 +1,6 @@
 #include "WebServer.hpp"
 #include <csignal>
+#include <cstring>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -13,6 +14,41 @@ void _clear(Client &_client)
     close(_client.m_client_fd);
     epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, _client.m_client_fd, NULL);
     client_map.erase(_client.m_client_fd);
+}
+
+void ManagingCGI(CGIs& CGItohandle, Client& _client)
+{
+    // Handle CGI :
+    char buffer[ReadingSize];
+    memset(buffer, 0, sizeof(buffer));
+    ssize_t read_bytes = recv(CGItohandle.CGIfd, buffer, sizeof(buffer), MSG_DONTWAIT);
+
+    // if (read_bytes == -1)
+    // {
+    //     close(CGItohandle.CGIfd);
+    //     epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, CGItohandle.CGIfd, NULL);
+    //     kill(CGItohandle.CGIpid, SIGKILL);
+    //     _client.response_Error(500, true);
+    // }
+    // if (read_bytes > 0)
+    // {
+    //     if (CGItohandle.Header_sent == false)
+    //     {
+    //         std::string Headers = headers_Creator(Response("HTTP/1.1", 200, false, std::string(), 0), 0);
+    //         Headers += "Transfer-Encoding: chunked\r\n";
+    //         if (-1 == send(CGItohandle.client_fd, Headers.c_str(), Headers.size(), MSG_DONTWAIT))
+    //         {
+    //             close(CGItohandle.CGIfd);
+    //             epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, CGItohandle.CGIfd, NULL);
+    //             kill(CGItohandle.CGIpid, SIGKILL);
+    //             throw std::runtime_error("send() "  + static_cast<std::string>(strerror(errno)));
+    //         }
+    //         CGItohandle.Header_sent = true;
+    //     }
+
+    // }
+    // if (read_bytes == 0)
+    //     ;
 }
 
 void multiplexer(void)
@@ -74,26 +110,11 @@ void multiplexer(void)
         {
             if (std::find(_CGIfds_map.begin(), _CGIfds_map.end(), events[index].data.fd) != _CGIfds_map.end())
             {
-                // Handle CGI :
-
                 CGIs* CGItohandle = CGIManagerSingleton::findCGIstructInVector(events[index].data.fd);
                 Client& _client = client_map[CGItohandle->client_fd];
 
-                char buffer[ReadingSize];
-                memset(buffer, 0, sizeof(buffer));
-
-                ssize_t read_bytes = recv(events[index].data.fd, buffer, sizeof(buffer), MSG_DONTWAIT);
-                if (read_bytes == -1)
-                {
-                    close(CGItohandle->CGIfd);
-                    epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, CGItohandle->CGIfd, NULL);
-                    kill(CGItohandle->CGIpid, SIGKILL);
-                    _client.response_Error(500, true);
-                }
-                if (read_bytes > 0)
-                    ;
-                if (read_bytes == 0)
-                    ;
+                ManagingCGI(*CGItohandle, _client);
+                continue;
             }
 
             if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)
@@ -167,7 +188,7 @@ void multiplexer(void)
             }
             catch (std::logic_error &e)
             {
-                throw;
+                throw e;
             }
             catch (std::runtime_error &e)
             {

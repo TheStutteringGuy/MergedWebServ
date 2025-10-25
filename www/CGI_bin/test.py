@@ -1,3 +1,6 @@
+print("Content-Type: text/html\r\n")
+print("\r\n")
+
 print("<!DOCTYPE html>")
 print("<html>")
 print("<head><title>Hello</title></head>")

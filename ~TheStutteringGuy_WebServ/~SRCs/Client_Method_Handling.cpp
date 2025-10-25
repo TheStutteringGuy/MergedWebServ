@@ -254,12 +254,12 @@ void Client::handle_Request(void)
         CGImanager.CGIsVector.push_back(CGIs());
         CGIs &obj = CGImanager.CGIsVector.back();
 
-        close (sv[1]);
         obj.CGIfd = sv[0];
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
 
-        obj.CGIpid= this->Handle_CGI(bin, actual_URI, &sv[2]);
+        obj.CGIpid= this->Handle_CGI(bin, actual_URI, sv);
+        close (sv[1]);
         epoll_event event;
         event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
         event.data.fd = obj.CGIfd;

@@ -10,7 +10,7 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
     else if (pid == 0)
     {
         close(sv[0]);
-        if ( /*dup2(sv[1], STDIN_FILENO) == -1 ||*/ dup2(sv[1], STDOUT_FILENO) == -1)
+        if (/*dup2(sv[1], STDIN_FILENO) == -1 ||*/ dup2(sv[1], STDOUT_FILENO) == -1)
         {
             std::cerr << "dup2() failed !!" << std::endl;
             std::exit(1);
@@ -25,7 +25,22 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
 
         if (!cookie_data.empty())
             env_strings.push_back("HTTP_COOKIE=" + cookie_data);
-        
+
+        if (this->m_request.m_method == "POST")
+        {
+            const std::vector<std::string> *content_lenght_header = find_Value_inMap(this->m_request.m_headers, "Content-Length");
+
+            if (NULL != content_lenght_header && !(*content_lenght_header).empty())
+            {
+                std::string content_lenght;
+
+                content_lenght = (*content_lenght_header)[0];
+                env_strings.push_back("CONTENT_LENGTH=" + content_lenght);
+            }
+            else
+                return 0; // i don't know what to return exactly :)
+        }
+
         std::vector<char *> env_p;
         for (size_t i = 0; i < env_strings.size(); ++i)
             env_p.push_back(const_cast<char *>(env_strings[i].c_str()));

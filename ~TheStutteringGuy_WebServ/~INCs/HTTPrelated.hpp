@@ -77,6 +77,8 @@ struct Request
     std::string                                         m_version;
     std::map< std::string, std::vector<std::string> >   m_headers;
 
+    std::map<std::string, std::string>                  m_cookie;
+
     std::string                                         m_body;
 };
 
@@ -241,6 +243,9 @@ private:
     void            response_justAstatus(const unsigned int &status_code);
 private:
     pid_t           Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv);
+    std::string     trim_whitespaces(const std::string &str);
+    void            parse_cookie();
+    std::string     serialize_cookies() const;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

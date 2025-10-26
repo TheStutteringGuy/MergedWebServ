@@ -17,9 +17,15 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
         }
         close(sv[1]);
 
+        std::string cookie_data = this->serialize_cookies();
+
         std::vector<std::string> env_strings;
         env_strings.push_back("REQUEST_METHOD=" + this->m_request.m_method);
         env_strings.push_back("QUERY_STRING=" + this->m_request.m_queryString);
+
+        if (!cookie_data.empty())
+            env_strings.push_back("HTTP_COOKIE=" + cookie_data);
+        
         std::vector<char *> env_p;
         for (size_t i = 0; i < env_strings.size(); ++i)
             env_p.push_back(const_cast<char *>(env_strings[i].c_str()));

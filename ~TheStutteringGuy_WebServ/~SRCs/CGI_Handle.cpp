@@ -37,8 +37,6 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
                 content_lenght = (*content_lenght_header)[0];
                 env_strings.push_back("CONTENT_LENGTH=" + content_lenght);
             }
-            else
-                return 0; // i don't know what to return exactly :)
         }
 
         std::vector<char *> env_p;

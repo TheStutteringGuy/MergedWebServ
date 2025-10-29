@@ -18,11 +18,14 @@ void _clear(Client &_client)
 
 void ManagingCGI(CGIs& CGItohandle, Client& _client)
 {
-    // Handle CGI :
+    // Handle CGI 
+    (void)CGItohandle;
+    (void)_client;
     char buffer[ReadingSize];
     memset(buffer, 0, sizeof(buffer));
     ssize_t read_bytes = recv(CGItohandle.CGIfd, buffer, sizeof(buffer), MSG_DONTWAIT);
 
+    (void)read_bytes;
     // if (read_bytes == -1)
     // {
     //     close(CGItohandle.CGIfd);

@@ -64,8 +64,9 @@ std::string Client::serialize_cookies() const
         cookie_string += "=";
         cookie_string += it->second;
 
-        if (std::next(it) != this->m_request.m_cookie.end())
+        if (++it != this->m_request.m_cookie.end())
             cookie_string += "; ";
+        --it;
     }
     return (cookie_string);
 }

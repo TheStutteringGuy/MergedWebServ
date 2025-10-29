@@ -3,7 +3,10 @@
 
 #include "Namespaces.hpp"
 #include "HTTPconst.hpp"
+#include <algorithm>
 #include <cstddef>
+#include <string>
+#include <sys/epoll.h>
 #include <unistd.h>
 #include <vector>
 
@@ -77,9 +80,10 @@ struct Request
     std::string                                         m_version;
     std::map< std::string, std::vector<std::string> >   m_headers;
 
-    std::map<std::string, std::string>                  m_cookie;
-
     std::string                                         m_body;
+    
+// Added by Ahmed
+    std::map<std::string, std::string>                  m_cookie;
 };
 
 inline std::string uid_generator(void)
@@ -113,7 +117,6 @@ public:
     std::string     m_request_buffer;
     std::string     m_headers_buffer;
     std::string     m_body_buffer;
-
 
 private:
     Request         m_request;
@@ -244,6 +247,8 @@ private:
     void            response_justAstatus(const unsigned int &status_code);
 private:
     pid_t           Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv);
+// Added by Ahmed
+private:
     std::string     trim_whitespaces(const std::string &str);
     void            parse_cookie();
     std::string     serialize_cookies() const;
@@ -251,47 +256,6 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Singletons :
-
-struct CGIs
-{
-    www::fd_t               CGIfd;
-    pid_t                   client_fd;
-    pid_t                   CGIpid;
-    bool                    Header_sent;
-    size_t                  timeout;
-};
-
-class CGIManagerSingleton
-{
-public:
-    std::vector<www::fd_t>  _CGIfds_map;
-    std::vector<CGIs> CGIsVector;
-
-private:
-    CGIManagerSingleton() {};
-    // CGIManagerSingleton(const CGIManagerSingleton& other);
-    // CGIManagerSingleton& operator=(const CGIManagerSingleton& other);
-
-public:
-    static CGIManagerSingleton& getCGIManagerSingleton()
-    {
-        static CGIManagerSingleton Singleton;
-        return Singleton;
-    }
-
-    static CGIs* findCGIstructInVector(www::fd_t &val)
-    {
-        CGIManagerSingleton Singleton = CGIManagerSingleton::getCGIManagerSingleton();
-        
-        for (std::vector<CGIs>::iterator it = Singleton.CGIsVector.begin(); it != Singleton.CGIsVector.end(); ++it)
-        {
-            if (it->CGIfd == val)
-                return &(*it);
-        }
-        return NULL;
-    }
-};
-
 
 class ValuesSingleton
 {
@@ -318,6 +282,53 @@ public:
         return Singleton;
     }
 };
+
+struct CGIs
+{
+    pid_t                   client_fd;
+    pid_t                   CGIpid;
+    bool                    Header_sent;
+    size_t                  timeout;
+
+    std::string             m_recv_buffer;
+    std::string             m_headers_buffer;
+    std::string             m_body_buffer;
+};
+
+class CGIManagerSingleton
+{
+public:
+    std::vector<www::fd_t>  _CGIfds_vect;
+    std::map<www::fd_t, CGIs> CGIsMap;
+
+private:
+    CGIManagerSingleton() {};
+    // CGIManagerSingleton(const CGIManagerSingleton& other);
+    // CGIManagerSingleton& operator=(const CGIManagerSingleton& other);
+
+public:
+    static CGIManagerSingleton& getCGIManagerSingleton()
+    {
+        static CGIManagerSingleton Singleton;
+        return Singleton;
+    }
+
+    void CGIerase(www::fd_t &fd)
+    {
+        CGIs& CGItoErase = this->CGIsMap[fd];
+
+        this->CGIsMap.erase(fd);
+        std::vector<www::fd_t>::iterator it;
+        it = std::find(this->_CGIfds_vect.begin(), this->_CGIfds_vect.end(), fd);
+        if (this->_CGIfds_vect.end() != it)
+            this->_CGIfds_vect.erase(it);
+
+        close(fd);
+        epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+        kill(CGItoErase.CGIpid, SIGTERM);
+    }
+};
+
 
 void    multiplexer(void);
 
@@ -388,6 +399,7 @@ inline std::string headers_Creator(struct Response response)
 
     std::string Response = response.m_HTTP_version + s + l_status_code + s + l_phrase + end;
     Response += "Date: " + get_http_date() + end;
+    Response += "Connection: close" + end;
     if (true == response.m_content_needed)
     {
         Response += "Content-Type: " + response.m_content_type + end;
@@ -408,6 +420,7 @@ inline std::string headers_Creator(struct Response response, int)
 
     std::string Response = response.m_HTTP_version + s + l_status_code + s + l_phrase + end;
     Response += "Date: " + get_http_date() + end;
+    Response += "Connection: close" + end;
     if (true == response.m_content_needed)
     {
         Response += "Content-Type: " + response.m_content_type + end;

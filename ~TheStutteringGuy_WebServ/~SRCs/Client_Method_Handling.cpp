@@ -1,8 +1,4 @@
 #include "WebServer.hpp"
-#include <algorithm>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <deque>
 
 static std::string getParentPath(const std::string& filepath)
 {
@@ -20,7 +16,6 @@ void Client::handle_DELETE(MyLocationBlock &p_locationBlock, const std::string& 
     struct stat test;
 
     (void)p_locationBlock;
-
     if (access(actual_URI.c_str(), F_OK) != 0)
         this->response_Error(404, true);
 
@@ -251,21 +246,21 @@ void Client::handle_Request(void)
 
         CGIManagerSingleton &CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
 
-        CGImanager.CGIsVector.push_back(CGIs());
-        CGIs &obj = CGImanager.CGIsVector.back();
+        CGIs& obj = CGImanager.CGIsMap[sv[0]];
 
-        obj.CGIfd = sv[0];
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
 
-        obj.CGIpid= this->Handle_CGI(bin, actual_URI, sv);
+        obj.CGIpid = this->Handle_CGI(bin, actual_URI, sv);
         close (sv[1]);
+
+        CGImanager._CGIfds_vect.push_back(sv[0]);
+
         epoll_event event;
         event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
-        event.data.fd = obj.CGIfd;
-        if (epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_ADD, obj.CGIfd, &event) == -1)
+        event.data.fd = sv[0];
+        if (epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_ADD, sv[0], &event) == -1)
             throw std::logic_error("epoll_ctl() " + static_cast<std::string>(strerror(errno)));
-        CGImanager._CGIfds_map.push_back(obj.CGIfd);
     
         throw CONTINUE;
     }

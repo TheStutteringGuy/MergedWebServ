@@ -1,9 +1,9 @@
 #include "WebServer.hpp"
-#include <csignal>
-#include <cstring>
+#include <ios>
+#include <stdexcept>
 #include <sys/epoll.h>
 #include <sys/socket.h>
-#include <unistd.h>
+#include <sys/wait.h>
 
 #define TIMEOUT_SEC 30000000
 
@@ -16,42 +16,95 @@ void _clear(Client &_client)
     client_map.erase(_client.m_client_fd);
 }
 
-void ManagingCGI(CGIs& CGItohandle, Client& _client)
+bool manage_Headers(CGIs& CGItohandle)
 {
-    // Handle CGI 
+    std::string delimeter = "\r\n\r\n";
+
+    size_t pos = CGItohandle.m_recv_buffer.find(delimeter);
+    if (pos == std::string::npos)
+        return false;
+    CGItohandle.m_headers_buffer = CGItohandle.m_recv_buffer.substr(0, pos + delimeter.size());
+    CGItohandle.m_body_buffer = CGItohandle.m_recv_buffer.substr(pos + delimeter.size());
+    CGItohandle.m_recv_buffer.clear();
+    return true;
+}
+
+void ManagingCGI(CGIs& CGItohandle, Client& _client, www::fd_t& CGIfd)
+{
     (void)CGItohandle;
     (void)_client;
+
     char buffer[ReadingSize];
     memset(buffer, 0, sizeof(buffer));
-    ssize_t read_bytes = recv(CGItohandle.CGIfd, buffer, sizeof(buffer), MSG_DONTWAIT);
+    ssize_t read_bytes = recv(CGIfd, buffer, sizeof(buffer), MSG_DONTWAIT);
 
-    (void)read_bytes;
-    // if (read_bytes == -1)
-    // {
-    //     close(CGItohandle.CGIfd);
-    //     epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, CGItohandle.CGIfd, NULL);
-    //     kill(CGItohandle.CGIpid, SIGKILL);
-    //     _client.response_Error(500, true);
-    // }
-    // if (read_bytes > 0)
-    // {
-    //     if (CGItohandle.Header_sent == false)
-    //     {
-    //         std::string Headers = headers_Creator(Response("HTTP/1.1", 200, false, std::string(), 0), 0);
-    //         Headers += "Transfer-Encoding: chunked\r\n";
-    //         if (-1 == send(CGItohandle.client_fd, Headers.c_str(), Headers.size(), MSG_DONTWAIT))
-    //         {
-    //             close(CGItohandle.CGIfd);
-    //             epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, CGItohandle.CGIfd, NULL);
-    //             kill(CGItohandle.CGIpid, SIGKILL);
-    //             throw std::runtime_error("send() "  + static_cast<std::string>(strerror(errno)));
-    //         }
-    //         CGItohandle.Header_sent = true;
-    //     }
+    if (CGItohandle.Header_sent == false)
+    {
+        if (read_bytes == 0 || read_bytes == -1)
+        {
+            int status;
+            waitpid(CGItohandle.CGIpid, &status, WNOHANG);
+            CGIManagerSingleton::getCGIManagerSingleton().CGIerase(CGIfd);
+            _client.response_Error(500, true);
+        }
+        if (read_bytes > 0)
+        {
+            CGItohandle.m_recv_buffer.append(buffer, read_bytes);
 
-    // }
-    // if (read_bytes == 0)
-    //     ;
+            bool Headers_retrieved = manage_Headers(CGItohandle);
+            if (Headers_retrieved == false)
+                return;
+
+            std::string Header = headers_Creator(Response("HTTP/1.1", 200, false, "", 0), 0);
+            Header += "Transfer-Encoding: chunked\r\n";
+            send(CGItohandle.client_fd, Header.c_str(), Header.size(), MSG_DONTWAIT);
+            send(CGItohandle.client_fd, CGItohandle.m_headers_buffer.c_str(), CGItohandle.m_headers_buffer.size(), MSG_DONTWAIT);
+            CGItohandle.Header_sent = true;
+
+            std::stringstream ss;
+            std::string size;
+            ss << std::hex << CGItohandle.m_body_buffer.size();
+            size = ss.str();
+
+            std::string end = "\r\n";
+
+            send(CGItohandle.client_fd, size.c_str(), size.size(), MSG_DONTWAIT);
+            send(CGItohandle.client_fd, end.c_str(), end.size(), MSG_DONTWAIT);
+
+            send(CGItohandle.client_fd, CGItohandle.m_body_buffer.c_str(), CGItohandle.m_body_buffer.size(), MSG_DONTWAIT);
+            send(CGItohandle.client_fd, end.c_str(), end.size(), MSG_DONTWAIT);
+        }
+    }
+    else 
+    {
+        if (read_bytes == 0 || read_bytes == -1)
+        {
+            int status;
+            waitpid(CGItohandle.CGIpid, &status, WNOHANG);
+
+            std::string theEnd = "0\r\n\r\n";
+            send(CGItohandle.client_fd, theEnd.c_str(), theEnd.size(), MSG_DONTWAIT);
+            CGIManagerSingleton::getCGIManagerSingleton().CGIerase(CGIfd);
+            _clear(_client);
+        }
+        if (read_bytes > 0)
+        {
+            std::string body = buffer;
+            std::string end = "\r\n";
+
+
+            std::stringstream ss;
+            std::string size;
+            ss << std::hex << body.size();
+            size = ss.str();
+
+            send(CGItohandle.client_fd, size.c_str(), size.size(), MSG_DONTWAIT);
+            send(CGItohandle.client_fd, end.c_str(), end.size(), MSG_DONTWAIT);
+
+            send(CGItohandle.client_fd, body.c_str(), body.size(), MSG_DONTWAIT);
+            send(CGItohandle.client_fd, end.c_str(), end.size(), MSG_DONTWAIT);
+        }
+    }
 }
 
 void multiplexer(void)
@@ -59,7 +112,7 @@ void multiplexer(void)
     www::fd_t &epoll_fd = ValuesSingleton::getValuesSingleton().epoll_fd;
     std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
     std::map<www::fd_t, MyServerBlock>  &serverfd_map = ValuesSingleton::getValuesSingleton()._serverfd_map;
-    std::vector<www::fd_t> &_CGIfds_map = CGIManagerSingleton::getCGIManagerSingleton()._CGIfds_map;
+    std::vector<www::fd_t> &_CGIfds_vect = CGIManagerSingleton::getCGIManagerSingleton()._CGIfds_vect;
 
     size_t timeout = getTime();
     std::map<int, Client>::iterator it = client_map.begin();
@@ -93,8 +146,8 @@ void multiplexer(void)
         if (serverfd_map.find(events[index].data.fd) != serverfd_map.end())
         {
             int client_sfd = accept(events[index].data.fd, NULL, NULL);
-            if (client_sfd == -1)   
-                continue;
+            if (client_sfd == -1)
+                throw std::runtime_error("accept()" + static_cast<std::string>(strerror(errno)));
             std::cout << "[INFO] : (A Client Connected) fd Reserved = "<< client_sfd << std::endl;
 
             epoll_event event;
@@ -111,12 +164,38 @@ void multiplexer(void)
         }
         else
         {
-            if (std::find(_CGIfds_map.begin(), _CGIfds_map.end(), events[index].data.fd) != _CGIfds_map.end())
+            // CGI STUFF :
+            if (std::find(_CGIfds_vect.begin(), _CGIfds_vect.end(), events[index].data.fd) != _CGIfds_vect.end())
             {
-                CGIs* CGItohandle = CGIManagerSingleton::findCGIstructInVector(events[index].data.fd);
-                Client& _client = client_map[CGItohandle->client_fd];
+                CGIs& CGItohandle = CGIManagerSingleton::getCGIManagerSingleton().CGIsMap[events[index].data.fd];
+                Client& _client = client_map[CGItohandle.client_fd];
 
-                ManagingCGI(*CGItohandle, _client);
+                if (events[index].events & EPOLLIN)
+                {
+                    ManagingCGI(CGItohandle, _client, events[index].data.fd);
+                    continue;
+                }
+                    
+                if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)
+                {
+                    if (CGItohandle.Header_sent == true)
+                    {
+                        int status;
+                        waitpid(CGItohandle.CGIpid, &status, WNOHANG);
+
+                        std::string theEnd = "0\r\n\r\n";
+                        send(CGItohandle.client_fd, theEnd.c_str(), theEnd.size(), MSG_DONTWAIT);
+                        CGIManagerSingleton::getCGIManagerSingleton().CGIerase(events[index].data.fd);
+                        _clear(_client);
+                    }
+                    else 
+                    {
+                        int status;
+                        waitpid(CGItohandle.CGIpid, &status, WNOHANG);
+                        CGIManagerSingleton::getCGIManagerSingleton().CGIerase(events[index].data.fd);
+                        _client.response_Error(500, true);
+                    }
+                }
                 continue;
             }
 

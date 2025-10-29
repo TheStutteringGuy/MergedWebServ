@@ -5,6 +5,7 @@
 #include <dirent.h>
 #include <sys/epoll.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
@@ -24,4 +25,3 @@
 #include <iomanip> 
 #include <signal.h>
 #include <sys/time.h>
-#include <iterator>

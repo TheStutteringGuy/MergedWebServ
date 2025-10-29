@@ -32,10 +32,10 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
 
             if (NULL != content_lenght_header && !(*content_lenght_header).empty())
             {
-                std::string content_lenght;
+                std::string content_length;
 
-                content_lenght = (*content_lenght_header)[0];
-                env_strings.push_back("CONTENT_LENGTH=" + content_lenght);
+                content_length = (*content_lenght_header)[0];
+                env_strings.push_back("CONTENT_LENGTH=" + content_length);
             }
         }
 

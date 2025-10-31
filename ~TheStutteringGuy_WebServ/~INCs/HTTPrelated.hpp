@@ -46,6 +46,7 @@ struct MyServerBlock
 
     std::string m_root;
     std::string m_cache;
+    std::string m_upload;
 
     size_t m_client_max_body_size;
     std::map<int, std::string> m_error_pages;

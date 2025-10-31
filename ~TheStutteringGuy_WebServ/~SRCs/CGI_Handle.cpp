@@ -2,7 +2,6 @@
 
 pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv)
 {
-
     pid_t pid;
     pid = fork();
     if (pid == -1)

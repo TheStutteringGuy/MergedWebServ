@@ -212,17 +212,6 @@ void multiplexer(void)
 
                 if (_client.readyto_send == false)
                 {
-                    static bool checker;
-
-                    if (checker == false)
-                    {
-                        std::string &l_cache = (_client.m_Myserver.m_cache = _client.m_Myserver.m_root);
-                        l_cache += static_cast<std::string>(cache);
-                        std::string l_upload = (_client.m_Myserver.m_root + static_cast<std::string>(upload_dir));
-                        if (access(l_cache.c_str(), F_OK | R_OK | W_OK) != 0 || access(l_upload.c_str(), F_OK | R_OK | W_OK) != 0 )
-                            _client.response_Error(500, true);
-                        checker = true;
-                    }
                     char buffer[ReadingSize];
                     memset(buffer, 0, sizeof(buffer));
                     ssize_t bytes_read = recv(_client.m_client_fd, buffer, sizeof(buffer), MSG_DONTWAIT);

@@ -25,18 +25,28 @@ void Print_Infos(void)
         for (size_t i = 0; i < servers_blocks[index].IPs.size(); ++i)
             std::cout << "║  💾 IP/Port:     " << std::setw(33) << std::left << (servers_blocks[index].IPs[i] + "/" + to_string_c98(servers_blocks[index].Ports[i])) << "║" << std::endl;
         std::cout << "║  💾 Max Body:    " << std::setw(33) << std::left << servers_blocks[index].m_client_max_body_size << "║" << std::endl;
-        std::cout << "╚═══════════════════════════════════════════════════╝" << std::endl;
+        std::cout << "╚═══════════════════════════════════════════════════╝" << std::endl << std::endl;
     } 
 }
 
 int API::Webserver(void)
 {
+    Print_generic_Rules();
     try
     {
         signal(SIGINT, handle_sig);
 
         std::vector<MyServerBlock> &server_blocks = ValuesSingleton::getValuesSingleton().servers_blocks;
         std::map<www::fd_t, MyServerBlock> &serverfd_map = ValuesSingleton::getValuesSingleton()._serverfd_map;
+
+        for (size_t index = 0; index < server_blocks.size(); ++index)
+        {
+            std::string &l_cache = server_blocks[index].m_cache;
+            std::string l_upload = server_blocks[index].m_upload;
+
+            if (access(l_cache.c_str(), F_OK | R_OK | W_OK) != 0 || access(l_upload.c_str(), F_OK | R_OK | W_OK) != 0)
+                throw std::logic_error("Please Follow The Rules => (Cache/Uplaod) one");
+        }
 
         www::fd_t epoll_fd = epoll_create1(0);
         if (-1 == epoll_fd)
@@ -112,7 +122,6 @@ int API::Webserver(void)
             }
         }
         Print_Infos();
-        Print_generic_Rules();
         while (www::SHUTDOWN == false)
         {
             try

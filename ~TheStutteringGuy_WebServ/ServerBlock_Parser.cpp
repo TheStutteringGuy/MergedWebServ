@@ -1,15 +1,15 @@
 #include "Exposed_Functions.hpp"
 #include "~INCs/HTTPrelated.hpp"
-#include <vector>
+#include "~INCs/Namespaces.hpp"
 
 static std::string root_check(std::string& root)
 {
-    std::string tmp(root);
+    return std::string(root);
 
-    if (tmp[tmp.size() - 1] != '/')
-        tmp += '/';
-
-    return tmp;
+    // std::string tmp(root);
+    // if (tmp[tmp.size() - 1] != '/')
+    //     tmp += '/';
+    // return tmp;
 }
 
 static std::map<std::string, std::vector<std::string> > directives_tomap(std::vector<Directive> &directives)
@@ -62,6 +62,8 @@ void API::ServerBlock_Parser(std::vector<ServerBlock> &servers_blocks)
 
         ref[index].m_locationBlocks = handle_LocationBlocks(servers_blocks[index].locationBlocks);
         ref[index].m_root = root_check(servers_blocks[index].root);
+        ref[index].m_cache = ref[index].m_root + "/" + static_cast<std::string>(cache);
+        ref[index].m_upload = ref[index].m_root + "/" + static_cast<std::string>(upload_dir);
         ref[index].m_error_pages = servers_blocks[index].error_pages;
         ref[index].m_directives = directives_tomap(servers_blocks[index].directives);
         ref[index].m_client_max_body_size = servers_blocks[index].clientSizeBody;

@@ -1,7 +1,7 @@
 # Variables :
 
 CXX = c++
-CPPFLAGS = -Wall -Wextra -Werror -g3 -std=c++98
+CPPFLAGS = -Wall -Wextra -Werror -std=c++98 #-g3
 RM = rm -f
 
 NAME = webserv

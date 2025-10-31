@@ -34,28 +34,22 @@ void Client::handle_DELETE(MyLocationBlock &p_locationBlock, const std::string& 
 void Client::handle_GET(MyLocationBlock &p_locationBlock, std::string& actual_URI)
 {
     struct stat test;
-
-    if (access(actual_URI.c_str(), F_OK) != 0)
-        this->response_Error(404, true);
     
     stat(actual_URI.c_str(), &test);
     if (S_ISDIR(test.st_mode))
     {
+        if (actual_URI[actual_URI.size() - 1] != '\0')
+            actual_URI.append("/");
+
         if (!p_locationBlock.index.empty())
         {
-            if (access((p_locationBlock.root + p_locationBlock.index).c_str(), F_OK | R_OK) != 0)
+            if (access((actual_URI + p_locationBlock.index).c_str(), F_OK | R_OK) != 0)
                 this->response_Error(404, true);
-            this->response_Get((p_locationBlock.root + p_locationBlock.index));
+            this->response_Get(actual_URI + p_locationBlock.index);
         }
+
         else if (p_locationBlock.autoindex == true)
         {
-            // listing the directory
-            if (this->m_request.m_URI[this->m_request.m_URI.size() - 1] != '/')
-            {
-                this->m_request.m_URI.append("/");
-                actual_URI.append("/");
-            }
-
             if (access(actual_URI.c_str(), R_OK | X_OK) != 0)
                 this->response_Error(403, true);
     
@@ -64,7 +58,7 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock, std::string& actual_UR
     
             dir_ptr = opendir(actual_URI.c_str());
             if (NULL == dir_ptr)
-                this->response_Error(503, true);
+                this->response_Error(500, true);
     
             std::string to_send;
             std::string s = " ";
@@ -82,14 +76,14 @@ void Client::handle_GET(MyLocationBlock &p_locationBlock, std::string& actual_UR
                     if (entry->d_type == DT_DIR)
                     {
                         std::stringstream ss;
-                        ss << "            <li><a href=\"" << this->m_request.m_URI + entry->d_name << "/\">" << entry->d_name << '/' << "</a></li>" << end;
+                        ss << "            <li><a href=\"" << this->m_request.m_URI + "/" + entry->d_name << "/\">" << entry->d_name << '/' << "</a></li>" << end;
                         to_send.insert(pos, ss.str());
                         pos += ss.str().size();
                     }
                     else if (entry->d_type == DT_REG)
                     {
                         std::stringstream ss;
-                        ss << "            <li><a href=\"" << this->m_request.m_URI + entry->d_name << "\" class=\"file-link\">" << entry->d_name << "</a></li>" << end;
+                        ss << "            <li><a href=\"" << this->m_request.m_URI + "/" + entry->d_name << "\" class=\"file-link\">" << entry->d_name << "</a></li>" << end;
                         to_send.insert(pos, ss.str());
                         pos += ss.str().size();
                     }
@@ -180,9 +174,11 @@ void Client::handle_Request(void)
     if (tmp_locationBlock.root.empty())
         tmp_locationBlock.root = this->m_Myserver.m_root;
 
-    std::string actual_URI(this->m_request.m_URI);
-    size_t pos = actual_URI.find(tmp_location);
-    actual_URI.replace(pos, tmp_location.size(), tmp_locationBlock.root);
+    std::string relative_path = this->m_request.m_URI.substr(tmp_location.size());
+    if (relative_path[0] != '/')
+        relative_path.insert(0, "/");
+
+    std::string actual_URI = tmp_locationBlock.root + relative_path;
 
     ///////////////////////////////////////////////////////////////////////////////////////////////////
     ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -206,8 +202,13 @@ void Client::handle_Request(void)
         throw CONTINUE;
     }
 
-    bool get(false), post(false);
+    //////////////////////////////////////////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////////////////////////////////////////////
 
+    if (access(actual_URI.c_str(), F_OK) != 0)
+        this->response_Error(404, true);
+
+    bool get(false), post(false);
     if (this->m_request.m_method == "GET")
     {
         if (std::find(tmp_allowedMethods.begin(), tmp_allowedMethods.end(), "GET") != tmp_allowedMethods.end())
@@ -247,14 +248,13 @@ void Client::handle_Request(void)
         CGIManagerSingleton &CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
 
         CGIs& obj = CGImanager.CGIsMap[sv[0]];
+        CGImanager._CGIfds_vect.push_back(sv[0]);
 
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
 
         obj.CGIpid = this->Handle_CGI(bin, actual_URI, sv);
         close (sv[1]);
-
-        CGImanager._CGIfds_vect.push_back(sv[0]);
 
         epoll_event event;
         event.events = EPOLLIN | EPOLLHUP | EPOLLERR;

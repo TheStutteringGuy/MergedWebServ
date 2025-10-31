@@ -25,9 +25,9 @@ void Print_generic_Rules(void)
     
     std::cout << "IMPORTANT NOTICE:\n";
     std::cout << "  These are important instructions that rules the webserv.\n";
-    std::cout << "  Neglecting any of this will end in crash:\n";
-    std::cout << "    - .Cache directory must be always present.\n\n";
-    std::cout << "    - /Upload directory must be always present.\n\n";
+    std::cout << "  Neglecting any of this will result in The WebServer not working\n";
+    std::cout << "    - .Cache directory must be always present in TheServers root_Directory.\n\n";
+    std::cout << "    - /Upload directory must be always present in TheServers root_Directory.\n\n";
     
     std::cout << "EXIT:\n";
     std::cout << "  Press Ctrl+C to stop the server.\n\n";

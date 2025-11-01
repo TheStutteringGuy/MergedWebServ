@@ -120,7 +120,7 @@ void Client::handle_POST(MyLocationBlock &p_locationBlock)
 
     std::string uid = uid_generator();
     std::string filename = uid + media_type;
-    std::string upload_path = static_cast<std::string>(this->m_Myserver.m_root) + static_cast<std::string>(upload_dir);
+    std::string upload_path = static_cast<std::string>(this->m_Myserver.m_root) + "/" + static_cast<std::string>(upload_dir);
     std::string final_path = upload_path + filename;
 
     if (std::rename(this->m_body_asFile_path.c_str(), final_path.c_str()) != 0)
@@ -248,19 +248,24 @@ void Client::handle_Request(void)
         CGIManagerSingleton &CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
 
         CGIs& obj = CGImanager.CGIsMap[sv[0]];
-        CGImanager._CGIfds_vect.push_back(sv[0]);
-
+        CGImanager.CGIfds_vect.push_back(sv[0]);
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
-
         obj.CGIpid = this->Handle_CGI(bin, actual_URI, sv);
         close (sv[1]);
 
-        epoll_event event;
-        event.events = EPOLLIN | EPOLLHUP | EPOLLERR;
-        event.data.fd = sv[0];
-        if (epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_ADD, sv[0], &event) == -1)
+        epoll_event event1;
+        event1.events = EPOLLIN | EPOLLHUP | EPOLLERR;
+        event1.data.fd = sv[0];
+        if (epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_ADD, sv[0], &event1) == -1)
             throw std::logic_error("epoll_ctl() " + static_cast<std::string>(strerror(errno)));
+
+        this->m_CGIfd = sv[0];
+
+        epoll_event event2;
+        event2.events = EPOLLHUP | EPOLLERR;
+        event2.data.fd = this->m_client_fd;
+        epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_MOD, this->m_client_fd, &event2);
     
         throw CONTINUE;
     }

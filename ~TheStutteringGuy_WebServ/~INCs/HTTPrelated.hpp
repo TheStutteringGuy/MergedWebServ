@@ -138,12 +138,13 @@ private:
 
 public:
     size_t          m_connectedTime;
+    www::fd_t       m_CGIfd;
 
 
 public:
-    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false) , m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false),  m_response_asFile(NULL), m_connectedTime(0) {};
+    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false) , m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false),  m_response_asFile(NULL), m_connectedTime(0), m_CGIfd(-1) {};
 
-    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL),  m_response_is_aFile(false), m_response_asFile(NULL), m_connectedTime(0) {};
+    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL),  m_response_is_aFile(false), m_response_asFile(NULL), m_connectedTime(0), m_CGIfd(-1) {};
     ~Client() 
     {
         if (m_body_asFile != NULL)
@@ -184,6 +185,7 @@ public:
         this->m_request = other.m_request;
         this->m_response_buffer = other.m_response_buffer;
         this->m_connectedTime = other.m_connectedTime;
+        this->m_CGIfd = other.m_CGIfd;
 
         this->m_body_asFile = NULL;
         this->m_response_asFile = NULL;
@@ -286,7 +288,7 @@ public:
 
 struct CGIs
 {
-    pid_t                   client_fd;
+    www::fd_t               client_fd;
     pid_t                   CGIpid;
     bool                    Header_sent;
     size_t                  timeout;
@@ -299,7 +301,7 @@ struct CGIs
 class CGIManagerSingleton
 {
 public:
-    std::vector<www::fd_t>  _CGIfds_vect;
+    std::vector<www::fd_t>  CGIfds_vect;
     std::map<www::fd_t, CGIs> CGIsMap;
 
 private:
@@ -314,20 +316,33 @@ public:
         return Singleton;
     }
 
+    void CGIeraseFrom_Map(www::fd_t &fd)
+    {
+        std::map<www::fd_t, CGIs>::iterator it = this->CGIsMap.find(fd);
+        if (it == this->CGIsMap.end())
+            return;
+
+        epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, fd, NULL);
+        kill((it->second).CGIpid, SIGKILL);
+
+        this->CGIsMap.erase(it);
+        close(fd);
+    }
+    void CGIeraseFrom_Vect(www::fd_t& fd)
+    {
+        std::vector<www::fd_t>::iterator it;
+        it = std::find(this->CGIfds_vect.begin(), this->CGIfds_vect.end(), fd);
+        if (this->CGIfds_vect.end() != it)
+            this->CGIfds_vect.erase(it);
+    }
+
     void CGIerase(www::fd_t &fd)
     {
-        CGIs& CGItoErase = this->CGIsMap[fd];
-
-        this->CGIsMap.erase(fd);
-        std::vector<www::fd_t>::iterator it;
-        it = std::find(this->_CGIfds_vect.begin(), this->_CGIfds_vect.end(), fd);
-        if (this->_CGIfds_vect.end() != it)
-            this->_CGIfds_vect.erase(it);
-
-        close(fd);
-        epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, fd, NULL);
-        kill(CGItoErase.CGIpid, SIGTERM);
+        this->CGIeraseFrom_Vect(fd);
+        this->CGIeraseFrom_Map(fd);
     }
+    
+    static void ManagingCGI(CGIs& CGItohandle, Client& _client, www::fd_t& CGIfd);
 };
 
 

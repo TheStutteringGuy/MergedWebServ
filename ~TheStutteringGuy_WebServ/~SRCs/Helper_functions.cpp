@@ -47,7 +47,7 @@ std::string generic_error_page(unsigned int error_code, std::string phrase)
     ss << "<head>" << end;
     ss << "    <meta charset=\"UTF-8\">" << end;
     ss << "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">" << end;
-    ss << "    <title> " << 400 << s << phrase << "</title>" << end;
+    ss << "    <title> " << error_code << s << phrase << "</title>" << end;
     ss << "    <style>" << end;
     ss << "        body {" << end;
     ss << "            margin: 0;" << end;

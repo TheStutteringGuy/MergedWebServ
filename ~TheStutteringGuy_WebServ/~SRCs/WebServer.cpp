@@ -34,8 +34,6 @@ int API::Webserver(void)
     Print_generic_Rules();
     try
     {
-        signal(SIGINT, handle_sig);
-
         std::vector<MyServerBlock> &server_blocks = ValuesSingleton::getValuesSingleton().servers_blocks;
         std::map<www::fd_t, MyServerBlock> &serverfd_map = ValuesSingleton::getValuesSingleton()._serverfd_map;
 
@@ -124,6 +122,9 @@ int API::Webserver(void)
         Print_Infos();
         while (www::SHUTDOWN == false)
         {
+            signal(SIGINT, handle_sig);
+            signal(SIGPIPE, SIG_IGN);
+            while (waitpid(-1, NULL, WNOHANG) > 0) { ;}
             try
             {
                 multiplexer();
@@ -146,8 +147,11 @@ int API::Webserver(void)
     catch (...) {}
 
     class ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
-
     for (size_t index = 0; index < cleanup.addrinfo_vect.size(); ++index)
         freeaddrinfo(cleanup.addrinfo_vect[index]);
+
+    class CGIManagerSingleton& CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
+    for (std::vector<www::fd_t>::iterator it = CGImanager.CGIfds_vect.begin(); it != CGImanager.CGIfds_vect.end(); ++it)
+        CGImanager.CGIerase(*it);
     return 0;
 }

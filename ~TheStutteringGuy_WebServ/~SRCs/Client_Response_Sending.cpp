@@ -45,10 +45,7 @@ void Client::handle_Response(void)
         
         ssize_t bytes_sent;
         if (-1 == (bytes_sent = send(this->m_client_fd, buffer.c_str(), bytes_read, MSG_DONTWAIT)))
-        {
-            _clear(*this);
-            throw std::runtime_error("send() " + static_cast<std::string>(strerror(errno)));
-        }
+            throw CONTINUE;
 
         if (bytes_sent < bytes_read)
             this->m_response_asFile->seekg(-(bytes_read - bytes_sent), std::ios::cur);

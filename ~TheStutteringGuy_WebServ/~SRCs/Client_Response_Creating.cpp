@@ -97,23 +97,3 @@ void Client::response_justAstatus(const unsigned int &status_code)
     epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_MOD, this->m_client_fd, &event);
     throw CONTINUE;
 }
-
-// void Client::response_Creator(const unsigned int &status_code, const bool& content_needed, const std::string& content_type, const std::string &body)
-// {
-//     std::string Headers;
-
-//     if (false == content_needed)
-//         Headers = headers_Creator(Response("HTTP/1.0", status_code, true,  content_type, body.size()));
-//     else 
-//         Headers = headers_Creator(Response("HTTP/1.0", status_code, false,  std::string(), 0));
-//     std::string to_send = Headers + body;
-
-//     this->m_response_buffer = to_send;
-//     this->readyto_send = true;
-
-//     epoll_event event;
-//     event.events = EPOLLOUT | EPOLLHUP | EPOLLERR;
-//     event.data.fd = this->m_client_fd;
-//     epoll_ctl(ServerSingleton::getServerSingleton().epoll_fd, EPOLL_CTL_MOD, this->m_client_fd, &event);
-//     throw CONTINUE;
-// }

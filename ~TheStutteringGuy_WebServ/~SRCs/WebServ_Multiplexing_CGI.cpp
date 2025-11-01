@@ -31,7 +31,7 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
         {
             if (read_bytes == 0)
             {
-                _client.response_Error(500, true);
+                _client.response_Error(502, true);
                 return ;
             }
 

@@ -93,7 +93,7 @@ void multiplexer(void)
                         _clear(_client);
                     }
                     else 
-                        _client.response_Error(500, true);
+                        _client.response_Error(502, true);
                 }
                 continue;
             }

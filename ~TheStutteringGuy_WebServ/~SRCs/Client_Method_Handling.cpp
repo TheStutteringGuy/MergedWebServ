@@ -251,7 +251,7 @@ void Client::handle_Request(void)
         CGImanager.CGIfds_vect.push_back(sv[0]);
         obj.client_fd = this->m_client_fd;
         obj.timeout = getTime();
-        obj.CGIpid = this->Handle_CGI(bin, actual_URI, sv);
+        obj.CGIpid = this->Handle_CGI(bin, actual_URI, sv, this->m_body_asFile_path);
         close (sv[1]);
 
         epoll_event event1;

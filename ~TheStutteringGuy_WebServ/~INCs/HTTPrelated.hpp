@@ -249,7 +249,7 @@ private:
     void            response_Get(const std::string& File);
     void            response_justAstatus(const unsigned int &status_code);
 private:
-    pid_t           Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv);
+    pid_t           Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv, const std::string& body_File);
 // Added by Ahmed
 private:
     std::string     trim_whitespaces(const std::string &str);

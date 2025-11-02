@@ -15,7 +15,7 @@
 
 struct MyLocationBlock
 {
-    MyLocationBlock() : autoindex(false) , is_Red(false), is_CGI(false) {};
+    MyLocationBlock() : autoindex(false), is_Red(false), is_CGI(false) {};
 
     std::map<std::string, std::vector<std::string> > directives;
 
@@ -59,34 +59,34 @@ struct MyServerBlock
 
 struct Response // this is more like struct HEADER
 {
-    std::string     m_HTTP_version;
-    unsigned int    m_status_code;
+    std::string m_HTTP_version;
+    unsigned int m_status_code;
 
-    bool            m_content_needed;
+    bool m_content_needed;
 
-    std::string     m_content_type;
-    int             m_content_length;
+    std::string m_content_type;
+    int m_content_length;
 
     Response() : m_HTTP_version("HTTP/1.0") {};
     ~Response() {};
-    Response(std::string HTTP_version, unsigned int status_code, bool content_needed, std::string content_type, int content_length) 
-    : m_HTTP_version(HTTP_version), m_status_code(status_code), m_content_needed(content_needed),m_content_type(content_type), m_content_length(content_length) {}
+    Response(std::string HTTP_version, unsigned int status_code, bool content_needed, std::string content_type, int content_length)
+        : m_HTTP_version(HTTP_version), m_status_code(status_code), m_content_needed(content_needed), m_content_type(content_type), m_content_length(content_length) {}
 };
 
 struct Request
 {
-    std::string                                         m_method;
+    std::string m_method;
 
-    std::string                                         m_URI;
-    std::string                                         m_queryString;
+    std::string m_URI;
+    std::string m_queryString;
 
-    std::string                                         m_version;
-    std::map< std::string, std::vector<std::string> >   m_headers;
+    std::string m_version;
+    std::map<std::string, std::vector<std::string> > m_headers;
 
-    std::string                                         m_body;
-    
-// Added by Ahmed
-    std::map<std::string, std::string>                  m_cookie;
+    std::string m_body;
+
+    // Added by Ahmed
+    std::map<std::string, std::string> m_cookie;
 };
 
 inline std::string uid_generator(void)
@@ -108,46 +108,50 @@ inline std::string uid_generator(void)
 class Client
 {
 public:
-    www::fd_t       m_client_fd;
-    MyServerBlock   m_Myserver;
+    www::fd_t m_client_fd;
+    MyServerBlock m_Myserver;
 
-    bool            header_done;
-    bool            need_body;
-    bool            m_isChunked;
-    bool            handling_request;            
-    bool            readyto_send;
+    bool header_done;
+    bool need_body;
+    bool m_isChunked;
+    bool handling_request;
+    bool readyto_send;
 
-    std::string     m_request_buffer;
-    std::string     m_headers_buffer;
-    std::string     m_body_buffer;
-
-private:
-    Request         m_request;
-    std::string     m_response_buffer;
+    std::string m_request_buffer;
+    std::string m_headers_buffer;
+    std::string m_body_buffer;
 
 private:
-    bool            m_body_asFile_init;
-    bool            m_response_asFile_init;
+    Request m_request;
+    std::string m_response_buffer;
 
-public:
-    std::fstream*   m_body_asFile;
-    std::string     m_body_asFile_path;
-    
 private:
-    bool            m_response_is_aFile;
-    std::fstream*   m_response_asFile;
-    std::string     m_response_asFile_path;
+    bool m_body_asFile_init;
+    bool m_response_asFile_init;
 
 public:
-    size_t          m_lastUpdatedTime;
-    www::fd_t       m_CGIfd;
+    std::fstream *m_body_asFile;
+    std::string m_body_asFile_path;
 
+private:
+    bool m_response_is_aFile;
+    std::fstream *m_response_asFile;
+    std::string m_response_asFile_path;
 
 public:
-    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false) , m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false),  m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
+    size_t m_lastUpdatedTime;
+    www::fd_t m_CGIfd;
 
-    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL),  m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
-    ~Client() 
+private: // ahmed
+    std::string session_id;
+    session session_data;
+    bool m_session_needs_set_cookie;
+
+public:
+    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
+
+    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
+    ~Client()
     {
         if (m_body_asFile != NULL)
         {
@@ -161,14 +165,14 @@ public:
             delete m_response_asFile;
         }
     };
-    Client(const Client& other) : m_body_asFile(NULL), m_response_asFile(NULL) { *this = other; };
+    Client(const Client &other) : m_body_asFile(NULL), m_response_asFile(NULL) { *this = other; };
 
 public:
-    Client& operator=(const Client& other)
+    Client &operator=(const Client &other)
     {
         if (this == &other)
             return *this;
-        
+
         if (this->m_body_asFile != NULL)
             delete m_body_asFile;
         if (this->m_response_asFile != NULL)
@@ -215,7 +219,7 @@ public:
             this->m_body_asFile_init = true;
         }
     }
-    void initialize_response_asFile(const std::string& filename)
+    void initialize_response_asFile(const std::string &filename)
     {
         if (m_response_asFile_init == false)
         {
@@ -226,37 +230,41 @@ public:
             if (!m_response_asFile->is_open())
                 throw std::runtime_error("m_body_asFile.isopem()");
             m_response_asFile_init = true;
-        } 
+        }
     }
 
 public:
-    bool            headerEnd_Checker(void);
-    void            headers_parser(void);
-    void            URI_parser(void);
-    void            headers_implication(void);
-    bool            body_checker(void);
+    bool headerEnd_Checker(void);
+    void headers_parser(void);
+    void URI_parser(void);
+    void headers_implication(void);
+    bool body_checker(void);
 
 public:
-    void            response_Error(const unsigned int &error_code, bool Content_needed);
-    void            response_html_ready(const std::string &string_);
+    void response_Error(const unsigned int &error_code, bool Content_needed);
+    void response_html_ready(const std::string &string_);
 
 public:
-    void            handle_Request(void);
-    void            handle_Response(void);
+    void handle_Request(void);
+    void handle_Response(void);
 
 private:
-    void            handle_GET(MyLocationBlock &p_locationBlock, std::string& actual_URI);
-    void            handle_POST(MyLocationBlock &p_locationBlock);
-    void            handle_DELETE(MyLocationBlock &p_locationBlock, const std::string& actual_URI);
-    void            response_Get(const std::string& File);
-    void            response_justAstatus(const unsigned int &status_code);
+    void handle_GET(MyLocationBlock &p_locationBlock, std::string &actual_URI);
+    void handle_POST(MyLocationBlock &p_locationBlock);
+    void handle_DELETE(MyLocationBlock &p_locationBlock, const std::string &actual_URI);
+    void response_Get(const std::string &File);
+    void response_justAstatus(const unsigned int &status_code);
+
 private:
-    pid_t           Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv, const std::string& body_File);
-// Added by Ahmed
+    pid_t Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv, const std::string &body_File);
+    // Added by Ahmed
 private:
-    std::string     trim_whitespaces(const std::string &str);
-    void            parse_cookie();
-    std::string     serialize_cookies() const;
+    std::string trim_whitespaces(const std::string &str);
+    void parse_cookie();
+    std::string serialize_cookies() const;
+    // for sessions
+    void handle_session_logic();
+    std::string get_session_cookie_header();
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -270,18 +278,18 @@ private:
     // ValuesSingleton& operator=(const ValuesSingleton& other);
 
 public:
-    std::vector<addrinfo* >         addrinfo_vect;
-    www::fd_t                       epoll_fd;
-    std::vector<MyServerBlock>      servers_blocks;
+    std::vector<addrinfo *> addrinfo_vect;
+    www::fd_t epoll_fd;
+    std::vector<MyServerBlock> servers_blocks;
 
-    std::map<www::fd_t, MyServerBlock>      _serverfd_map;
-    std::map <www::fd_t, Client>            _clients_map;
+    std::map<www::fd_t, MyServerBlock> _serverfd_map;
+    std::map<www::fd_t, Client> _clients_map;
 
-    struct HTTPstatus_phrase        m_HTTPstatus_phrase;
-    struct FileContent_type         m_FileContent_type;
+    struct HTTPstatus_phrase m_HTTPstatus_phrase;
+    struct FileContent_type m_FileContent_type;
     struct Reverse_FileContent_type m_Reverse_FileContent_type;
 
-    static ValuesSingleton& getValuesSingleton()
+    static ValuesSingleton &getValuesSingleton()
     {
         static ValuesSingleton Singleton;
         return Singleton;
@@ -290,20 +298,20 @@ public:
 
 struct CGIs
 {
-    www::fd_t               client_fd;
-    pid_t                   CGIpid;
-    bool                    Header_sent;
-    size_t                  timeout;
+    www::fd_t client_fd;
+    pid_t CGIpid;
+    bool Header_sent;
+    size_t timeout;
 
-    std::string             m_recv_buffer;
-    std::string             m_headers_buffer;
-    std::string             m_body_buffer;
+    std::string m_recv_buffer;
+    std::string m_headers_buffer;
+    std::string m_body_buffer;
 };
 
 class CGIManagerSingleton
 {
 public:
-    std::vector<www::fd_t>  CGIfds_vect;
+    std::vector<www::fd_t> CGIfds_vect;
     std::map<www::fd_t, CGIs> CGIsMap;
 
 private:
@@ -312,7 +320,7 @@ private:
     // CGIManagerSingleton& operator=(const CGIManagerSingleton& other);
 
 public:
-    static CGIManagerSingleton& getCGIManagerSingleton()
+    static CGIManagerSingleton &getCGIManagerSingleton()
     {
         static CGIManagerSingleton Singleton;
         return Singleton;
@@ -330,7 +338,7 @@ public:
         this->CGIsMap.erase(it);
         close(fd);
     }
-    void CGIeraseFrom_Vect(www::fd_t& fd)
+    void CGIeraseFrom_Vect(www::fd_t &fd)
     {
         std::vector<www::fd_t>::iterator it;
         it = std::find(this->CGIfds_vect.begin(), this->CGIfds_vect.end(), fd);
@@ -342,18 +350,17 @@ public:
         this->CGIeraseFrom_Vect(fd);
         this->CGIeraseFrom_Map(fd);
     }
-    
-    static void ManagingCGI(CGIs& CGItohandle, Client& _client, www::fd_t& CGIfd);
+
+    static void ManagingCGI(CGIs &CGItohandle, Client &_client, www::fd_t &CGIfd);
 };
 
-
-void    multiplexer(void);
+void multiplexer(void);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Functions : 
+// Functions :
 
 template <typename T>
-static std::string  to_string_c98(T value) 
+static std::string to_string_c98(T value)
 {
     std::stringstream ss;
     ss << value;
@@ -365,18 +372,18 @@ inline size_t getTime()
     timeval time;
 
     gettimeofday(&time, NULL);
-    
+
     size_t value_usec = static_cast<size_t>(time.tv_sec) * 1000000 + time.tv_usec;
 
     return value_usec;
 }
 
-inline std::string readFile(const std::string& filename) 
+inline std::string readFile(const std::string &filename)
 {
     std::fstream file(filename.c_str(), std::ios::in | std::ios::binary);
     if (!file.is_open())
         throw std::runtime_error("file.open()" + static_cast<std::string>(strerror(errno)));
-    
+
     file.seekg(0, std::ios::end);
     size_t size = file.tellg();
     file.seekg(0, std::ios::beg);
@@ -386,7 +393,7 @@ inline std::string readFile(const std::string& filename)
     return buffer;
 }
 
-inline const std::vector<std::string>* find_Value_inMap(const std::map<std::string, std::vector<std::string> > &map, const std::string& key)
+inline const std::vector<std::string> *find_Value_inMap(const std::map<std::string, std::vector<std::string> > &map, const std::string &key)
 {
     std::map<std::string, std::vector<std::string> >::const_iterator it = map.find(key);
     if (it != map.end())
@@ -396,7 +403,7 @@ inline const std::vector<std::string>* find_Value_inMap(const std::map<std::stri
 
 // Response Related :
 
-inline static std::string get_http_date() 
+inline static std::string get_http_date()
 {
     char buf[128];
     time_t t = time(NULL);
@@ -446,10 +453,39 @@ inline std::string headers_Creator(struct Response response, int)
     return Response;
 }
 
-// inline std::string getFullPath(const std::string& relative_path) 
+// inline std::string getFullPath(const std::string& relative_path)
 // {
 //     char resolved_path[PATH_MAX];
-//     if (realpath(relative_path.c_str(), resolved_path) != NULL) 
+//     if (realpath(relative_path.c_str(), resolved_path) != NULL)
 //         return std::string(resolved_path);
 //     return "";
 // }
+
+// session class
+class sessionManager
+{
+private:
+    std::map<std::string, session> m_session;
+    time_t timeout_sec;
+
+    sessionManager() : timeout_sec(3600) {};
+    ~sessionManager() {};
+
+public:
+    static sessionManager &getSession()
+    {
+        static sessionManager instance;
+        return (instance);
+    };
+
+    time_t getTimeout() const
+    {
+        return (timeout_sec);
+    };
+
+public:
+    std::string generate_session_id();
+    std::string create_session(const std::string &user_id = "");
+    bool get_session(const std::string &session_id, session &out_session);
+    void cleanup_session();
+};

@@ -56,17 +56,29 @@ void Client::parse_cookie()
 
 std::string Client::serialize_cookies() const
 {
-    std::string cookie_string;
+    std::string cookie_string = "";
+    bool first_cookie = true;
 
     for (std::map<std::string, std::string>::const_iterator it = this->m_request.m_cookie.begin(); it != this->m_request.m_cookie.end(); it++)
     {
+        if (!first_cookie)
+            cookie_string += "; ";
         cookie_string += it->first;
         cookie_string += "=";
         cookie_string += it->second;
+        first_cookie = false;
+    }
 
-        if (++it != this->m_request.m_cookie.end())
-            cookie_string += "; ";
-        --it;
+    if (!this->session_id.empty())
+    {
+        if (this->m_request.m_cookie.find("session_id") == this->m_request.m_cookie.end() ||
+            this->m_request.m_cookie.find("session_id")->second != this->session_id)
+        {
+            if (!first_cookie)
+                cookie_string += "; ";
+            cookie_string += "session_id=";
+            cookie_string += this->session_id;
+        }
     }
     return (cookie_string);
 }

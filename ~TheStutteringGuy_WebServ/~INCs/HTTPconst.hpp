@@ -140,3 +140,10 @@ public:
         return (it != m_HTTPstatus_phrase.end()) ? it->second : "Unknown Status";
     }
 };
+
+// session struct
+struct session
+{
+    std::string user_id;
+    time_t experation_time;
+};

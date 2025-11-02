@@ -125,7 +125,6 @@ void Client::headers_parser()
                 _client.m_request.m_headers[key].push_back(header_line);
         }
     }
-    this->parse_cookie(); // call it here;
 }
 
 void Client::headers_implication()

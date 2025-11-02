@@ -32,8 +32,7 @@ int main(int argc, char **argv)
         if (1 == API::Webserver())
             return 1;
     }
-    catch (const std::exception &e)
-    {
+    catch (const std::exception &e) {
         std::cout << "Error : " << e.what() << std::endl;
     }
     return 0;

@@ -5,7 +5,8 @@
 #include <sys/socket.h>
 #include <sys/wait.h>
 
-#define TIMEOUT_SEC 30000000
+// #define TIMEOUT_SEC 30000000
+// #define TIMEOUT_CGI 30000000
 
 void _clear(Client &_client)
 {
@@ -18,6 +19,29 @@ void _clear(Client &_client)
     std::cerr << "[INFO] : Cleaning up from My Side" << std::endl;
 }
 
+// void Check_Timeout()
+// {
+//     std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
+
+//     size_t timeout = getTime();
+//     std::map<int, Client>::iterator it = client_map.begin();
+//     while (it != client_map.end())
+//     {
+//         if ((timeout - it->second.m_lastUpdatedTime) >= TIMEOUT_SEC)
+//         {
+//             std::map<int, Client>::iterator temp_it = it;
+//             ++it;
+//             epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, temp_it->first, NULL);
+//             close(temp_it->first);
+//             client_map.erase(temp_it);
+//         }
+//         else
+//             ++it;
+//     }
+
+//     // std::vector<www::fd_t> &_CGIfds_vect = CGIManagerSingleton::getCGIManagerSingleton().CGIfds_vect;
+// }
+
 void multiplexer(void)
 {
     www::fd_t &epoll_fd = ValuesSingleton::getValuesSingleton().epoll_fd;
@@ -25,28 +49,12 @@ void multiplexer(void)
     std::map<www::fd_t, MyServerBlock>  &serverfd_map = ValuesSingleton::getValuesSingleton()._serverfd_map;
     std::vector<www::fd_t> &_CGIfds_vect = CGIManagerSingleton::getCGIManagerSingleton().CGIfds_vect;
 
-    // size_t timeout = getTime();
-    // std::map<int, Client>::iterator it = client_map.begin();
-    // while (it != client_map.end())
-    // {
-    //     if ((timeout - it->second.m_connectedTime) >= TIMEOUT_SEC)
-    //     {
-    //         std::map<int, Client>::iterator temp_it = it;
-    //         ++it;
-    //         epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, temp_it->first, NULL);
-    //         close(temp_it->first);
-    //         client_map.erase(temp_it);
-    //     }
-    //     else
-    //         ++it;
-    // }
-
     epoll_event events[MAX_EVENTS];
     int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 10000);
     if (-1 == n)
     {
         if (errno == EINTR)
-            throw www::SHUTDOWN;
+            return ;
         throw std::logic_error("epoll_wait() " + static_cast<std::string>(strerror(errno)));
     }
     if (0 == n)
@@ -67,7 +75,7 @@ void multiplexer(void)
 
             Client temp(client_sfd);
             temp.m_Myserver = serverfd_map[events[index].data.fd];
-            temp.m_connectedTime = getTime();
+            temp.m_lastUpdatedTime = getTime();
             client_map[client_sfd] = temp;
 
             if (-1 == epoll_ctl(epoll_fd, EPOLL_CTL_ADD, client_sfd, &event))
@@ -120,10 +128,7 @@ void multiplexer(void)
                         ssize_t bytes_read = recv(_client.m_client_fd, buffer, sizeof(buffer), MSG_DONTWAIT);
                         
                         if (-1 == bytes_read)
-                        {
-                            _clear(_client);
-                            throw std::runtime_error("recv() " + static_cast<std::string>(strerror(errno)));
-                        }
+                            continue;
                         else if (0 == bytes_read)
                         {
                             std::cout << "[INFO] : (A Client Disconnected) fd Reserved = : "<< events[index].data.fd << std::endl;
@@ -132,6 +137,7 @@ void multiplexer(void)
                         }
                         else if (0 < bytes_read)
                         {
+                            _client.m_lastUpdatedTime = getTime();
                             _client.initialize_body_asFile();
                             
                             if (_client.handling_request == false)
@@ -160,22 +166,18 @@ void multiplexer(void)
                     }
                     _client.handle_Response();
                 }
-                catch (std::logic_error &e)
-                {
+                catch (std::logic_error &e) {
                     throw e;
                 }
-                catch (std::runtime_error &e)
-                {
+                catch (std::runtime_error &e) {
                     std::cerr << www::RED << "[ERROR] : " << e.what() << www::RESET << std::endl;
                     continue;
                 }
-                catch (std::exception &e)
-                {
+                catch (std::exception &e) {
                     std::cerr << www::YELLOW << "[DEBUG] : " << e.what() << www::RESET << std::endl;
                     continue;
                 }
-                catch (const int &i)
-                {
+                catch (const int &i) {
                     switch (i) {
                         case CONTINUE: continue;
                         case END: { std::cout << "[INFO] : Closing the Connection to the Client by My side" << std::endl ; continue; }

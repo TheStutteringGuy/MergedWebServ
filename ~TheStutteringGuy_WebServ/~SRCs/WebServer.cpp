@@ -1,4 +1,6 @@
 #include "WebServer.hpp"
+#include <iostream>
+#include <vector>
 
 const std::string www::Allowed_Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .-_~:/?#[]@!$&'()*+,;=%";
 const std::string www::RED = "\033[31m";
@@ -10,7 +12,11 @@ const std::string www::CYAN = "\033[36m";
 const std::string www::RESET = "\033[0m";
 
 bool www::SHUTDOWN = false;
-void handle_sig(int) { www::SHUTDOWN = true; }
+void handle_sig(int) 
+{
+    std::cout << std::endl << www::YELLOW <<"[WARNING] : SIGINT Triggered" << www::RESET << std::endl; 
+    www::SHUTDOWN = true; 
+}
 
 void Print_Infos(void)
 {
@@ -120,31 +126,28 @@ int API::Webserver(void)
             }
         }
         Print_Infos();
+        signal(SIGINT, handle_sig);
+        signal(SIGPIPE, SIG_IGN);
         while (www::SHUTDOWN == false)
         {
-            signal(SIGINT, handle_sig);
-            signal(SIGPIPE, SIG_IGN);
             while (waitpid(-1, NULL, WNOHANG) > 0) { ;}
-            try
-            {
+            try {
                 multiplexer();
             }
-            catch(const std::logic_error &e)
-            {
+            catch(const std::logic_error &e) {
                 throw e;
             }
-            catch(const bool&)
-            {
-                break;
+            catch(...) {
+                std::cerr << "An unknown exception was caught in the main loop!" << std::endl;
             }
-            catch(...) {}
         }
     }
-    catch (std::logic_error &e)
-    {
+    catch (std::logic_error &e) {
         std::cerr << www::MAGENTA << "[FATAL] : " << e.what() << www::RESET << std::endl;
     }
-    catch (...) {}
+    catch (...) {
+        std::cerr << "An unknown exception was caught in the main loop!" << std::endl;
+    }
 
     class ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
     for (size_t index = 0; index < cleanup.addrinfo_vect.size(); ++index)
@@ -152,6 +155,6 @@ int API::Webserver(void)
 
     class CGIManagerSingleton& CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
     for (std::vector<www::fd_t>::iterator it = CGImanager.CGIfds_vect.begin(); it != CGImanager.CGIfds_vect.end(); ++it)
-        CGImanager.CGIerase(*it);
+        CGImanager.CGIeraseFrom_Map(*it);
     return 0;
 }

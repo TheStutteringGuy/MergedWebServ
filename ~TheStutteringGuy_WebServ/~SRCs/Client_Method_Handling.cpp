@@ -239,7 +239,7 @@ void Client::handle_Request(void)
             bin = tmp_locationBlock.cgi_infos[extension];
 
         www::fd_t sv[2];
-        if (socketpair(AF_UNIX, SOCK_STREAM, 0, sv) == -1)
+        if (socketpair(AF_UNIX, SOCK_STREAM | SOCK_NONBLOCK, 0, sv) == -1)
         {
             std::cerr << "socketpair() " + static_cast<std::string>(strerror(errno)) << std::endl;
             this->response_Error(500, true);

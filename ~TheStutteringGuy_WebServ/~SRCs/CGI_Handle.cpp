@@ -1,6 +1,4 @@
 #include "WebServer.hpp"
-#include <fcntl.h>
-#include <unistd.h>
 
 pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv, const std::string& body_File)
 {
@@ -8,15 +6,11 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
     pid_t pid;
     pid = fork();
     if (pid == -1)
-        std::exit(127);
+        std::exit(1);
     else if (pid == 0)
     {
         close(sv[0]);
-
-        www::fd_t fd = open(body_File.c_str(), O_NONBLOCK | O_RDONLY, S_IRUSR | S_IRGRP | S_IROTH);
-        if (fd == -1)
-            exit(127);
-        if (dup2(fd, STDIN_FILENO) || dup2(sv[1], STDERR_FILENO) == -1 || dup2(sv[1], STDOUT_FILENO) == -1)
+        if (dup2(sv[1], STDERR_FILENO) == -1 || dup2(sv[1], STDOUT_FILENO) == -1)
         {
             std::cerr << "dup2() failed !!" << std::endl;
             std::exit(1);
@@ -34,6 +28,16 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
 
         if (this->m_request.m_method == "POST")
         {
+            www::fd_t fd = open(body_File.c_str(), O_NONBLOCK | O_RDONLY, S_IRUSR | S_IRGRP | S_IROTH);
+            if (fd == -1)
+                exit(1);
+
+            if (dup2(fd, STDIN_FILENO) == -1)
+            {
+                std::cerr << "dup2() failed !!" << std::endl;
+                std::exit(1);
+            }
+
             const std::vector<std::string> *content_lenght_header = find_Value_inMap(this->m_request.m_headers, "Content-Length");
 
             if (NULL != content_lenght_header && !(*content_lenght_header).empty())

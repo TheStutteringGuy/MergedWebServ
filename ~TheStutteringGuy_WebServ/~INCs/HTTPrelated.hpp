@@ -31,6 +31,8 @@ struct MyLocationBlock
     bool is_CGI;
     std::map<std::string, std::string> cgi_infos;
 
+    bool is_Upload;
+    std::string uplaod_path;
     std::string actual_URI;
 };
 
@@ -137,14 +139,14 @@ private:
     std::string     m_response_asFile_path;
 
 public:
-    size_t          m_connectedTime;
+    size_t          m_lastUpdatedTime;
     www::fd_t       m_CGIfd;
 
 
 public:
-    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false) , m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false),  m_response_asFile(NULL), m_connectedTime(0), m_CGIfd(-1) {};
+    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false) , m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false),  m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
 
-    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL),  m_response_is_aFile(false), m_response_asFile(NULL), m_connectedTime(0), m_CGIfd(-1) {};
+    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL),  m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
     ~Client() 
     {
         if (m_body_asFile != NULL)
@@ -184,7 +186,7 @@ public:
         this->m_body_buffer = other.m_body_buffer;
         this->m_request = other.m_request;
         this->m_response_buffer = other.m_response_buffer;
-        this->m_connectedTime = other.m_connectedTime;
+        this->m_lastUpdatedTime = other.m_lastUpdatedTime;
         this->m_CGIfd = other.m_CGIfd;
 
         this->m_body_asFile = NULL;
@@ -335,7 +337,6 @@ public:
         if (this->CGIfds_vect.end() != it)
             this->CGIfds_vect.erase(it);
     }
-
     void CGIerase(www::fd_t &fd)
     {
         this->CGIeraseFrom_Vect(fd);

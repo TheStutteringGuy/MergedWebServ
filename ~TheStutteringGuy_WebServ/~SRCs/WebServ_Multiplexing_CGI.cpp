@@ -22,6 +22,7 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
     {
         char buffer[ReadingSize];
         memset(buffer, 0, sizeof(buffer));
+        std::cout << "HERE" << std::endl;
         ssize_t read_bytes = recv(CGIfd, buffer, sizeof(buffer), MSG_DONTWAIT | MSG_NOSIGNAL);
 
         if (read_bytes == -1)
@@ -98,8 +99,7 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
             }
         }
     }
-    catch (int &checker) 
-    {
+    catch (int &checker) {
         if (checker == -1)
             _clear(_client);
         return ;

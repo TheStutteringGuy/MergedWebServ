@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:22 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/14 14:25:15 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/02 23:45:10 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -83,6 +83,11 @@ private:
   };
   
   class InvalidReturnCode : public std::exception
+  {
+    virtual const char *what() const throw();
+  };
+  
+  class InvalidUploadPath : public std::exception
   {
     virtual const char *what() const throw();
   };

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Soul Society Login</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .page-border {
+            border: 2px solid #ffffff;
+            min-height: calc(100vh - 40px);
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .action-btn {
+            background-color: transparent;
+            border: 2px solid #ffffff;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 120px;
+            text-align: center;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+        }
+        
+        .action-btn:hover {
+            background-color: #ffffff;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 350px;
+            padding: 20px;
+            border: 1px solid #444444;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .form-group label {
+            font-size: 14px;
+            color: #bbbbbb;
+        }
+
+        .form-group input {
+            background-color: #111111;
+            border: 1px solid #ffffff;
+            padding: 10px;
+            font-size: 16px;
+            font-family: 'Courier New', monospace;
+            color: #ffffff;
+            outline: none; 
+        }
+
+        .form-group input:focus {
+            border-color: #ff0000;
+        }
+
+        .actions {
+             margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-border">
+        <div class="title">ACCESS GATEWAY</div>
+        
+        <form class="login-form" method="POST" action="/login_handler">
+            <div class="form-group">
+                <label for="username">USER ID</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">PASSWORD KEY</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            
+            <div class="actions">
+                <button type="submit" class="action-btn">INITIATE LOGIN</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

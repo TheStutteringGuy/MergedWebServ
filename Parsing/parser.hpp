@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/26 16:11:52 by aahlaqqa          #+#    #+#             */
-/*   Updated: 2025/10/20 11:29:44 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/02 23:23:45 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,6 +50,9 @@ struct LocationBlock
     std::map<std::string, std::string> cgi;
     bool is_redirection;
     bool is_cgi;
+    // for upload
+    bool upload_on;
+    std::string upload_path;
 };
 
 struct ServerBlock

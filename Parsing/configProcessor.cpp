@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:24 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/27 17:31:13 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/02 23:47:04 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,6 +49,11 @@ const char *ConfigProcessor::InvalidClientBodySize::what() const throw()
 const char *ConfigProcessor::InvalidReturnCode::what() const throw()
 {
     return "Invalid return code !";
+};
+
+const char *ConfigProcessor::InvalidUploadPath::what() const throw()
+{
+    return "Invalid upload path !";
 };
 
 void ConfigProcessor::processServerBlock(std::vector<ServerBlock> &blocks)
@@ -183,6 +188,8 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
     (void)server;
     location.is_cgi = false;
     location.is_redirection = false;
+    location.upload_on = false;
+    location.upload_path = "";
     for (size_t i = 0; i < location.directives.size(); i++)
     {
         const Directive &dir = location.directives[i];
@@ -202,6 +209,16 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
         {
             if (!dir.values.empty())
                 location.autoindex = (dir.values[0] == "on");
+        }
+        else if (dir.name == "upload_on")
+        {
+            if (!dir.values.empty() && dir.values[0] == "on")
+                location.upload_on = true;
+        }
+        else if (dir.name == "upload_path")
+        {
+            if (!dir.values.empty())
+                location.upload_path = dir.values[0];
         }
         else if (dir.name == "return")
         {
@@ -235,6 +252,12 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
                 throw Parser::InvalidCgi();
             }
         }
+    }
+
+    if (location.upload_on == true)
+    {
+        if (location.upload_path.empty())
+            throw InvalidUploadPath();
     }
 };
 

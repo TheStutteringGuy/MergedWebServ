@@ -49,6 +49,13 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
             }
         }
 
+        // add it for test :)
+        std::string set_cookie_header = this->get_session_cookie_header();
+        if (!set_cookie_header.empty())
+        {
+            env_strings.push_back("SERVER_SET_COOKIE=" + set_cookie_header);
+        }
+
         std::vector<char *> env_p;
         for (size_t i = 0; i < env_strings.size(); ++i)
             env_p.push_back(const_cast<char *>(env_strings[i].c_str()));

@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/06/04 20:41:13 by ahmed             #+#    #+#             */
-/*   Updated: 2025/10/30 22:55:07 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/02 23:29:26 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,7 +20,7 @@ Parser::~Parser() {
 
 };
 
-LocationBlock::LocationBlock() : autoindex(false), is_redirection(false), is_cgi(false) {};
+LocationBlock::LocationBlock() : autoindex(false), is_redirection(false), is_cgi(false), upload_on(false) {};
 
 LocationBlock::~LocationBlock() {};
 
@@ -289,6 +289,8 @@ void Parser::validatConfig() const
     validDirectives.insert("return");
     validDirectives.insert("cgi");
     validDirectives.insert("client_max_body_size");
+    validDirectives.insert("upload_on");
+    validDirectives.insert("upload_path");
     
     for (size_t i = 0; i < server_blocks.size(); i++)
     {

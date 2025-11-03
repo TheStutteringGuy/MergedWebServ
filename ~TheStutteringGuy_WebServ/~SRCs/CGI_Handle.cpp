@@ -48,8 +48,6 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
                 env_strings.push_back("CONTENT_LENGTH=" + content_length);
             }
         }
-
-        // add it for test :)
         std::string set_cookie_header = this->get_session_cookie_header();
         if (!set_cookie_header.empty())
         {

@@ -80,12 +80,12 @@ const char *Parser::NoRoot::what() const throw()
 
 const char *Parser::InvalidMthode::what() const throw()
 {
-    return "Invalid HTTP methode !!";
+    return "Invalid HTTP method !!";
 };
 
 const char *Parser::InvalidCgi::what() const throw()
 {
-    return "Invalid CGI methode !!";
+    return "Invalid CGI method !!";
 };
 
 std::vector<ServerBlock> &Parser::getServerBlock()

@@ -120,7 +120,7 @@ void Client::handle_POST(MyLocationBlock &p_locationBlock)
 
     std::string uid = uid_generator();
     std::string filename = uid + media_type;
-    std::string upload_path = static_cast<std::string>(this->m_Myserver.m_root) + "/" + static_cast<std::string>(upload_dir);
+    std::string upload_path = static_cast<std::string>(this->m_Myserver.m_root) + "/" + p_locationBlock.uplaod_path + "/";
     std::string final_path = upload_path + filename;
 
     if (std::rename(this->m_body_asFile_path.c_str(), final_path.c_str()) != 0)
@@ -130,7 +130,7 @@ void Client::handle_POST(MyLocationBlock &p_locationBlock)
     }
 
     std::string Headers = headers_Creator(Response("HTTP/1.0", 201, false, std::string(), 0), 0);
-    std::string Locattion_Header = "Location: " + static_cast<std::string>(upload_dir) + filename + "\r\n";
+    std::string Locattion_Header = "Location: " + p_locationBlock.uplaod_path + "/" + filename + "\r\n";
 
     Headers += Locattion_Header + "\r\n";
 
@@ -254,7 +254,7 @@ void Client::handle_Request(void)
         CGIs& obj = CGImanager.CGIsMap[sv[0]];
         CGImanager.CGIfds_vect.push_back(sv[0]);
         obj.client_fd = this->m_client_fd;
-        obj.timeout = getTime();
+        obj.m_lastUpdatedTime = getTime();
         obj.CGIpid = this->Handle_CGI(bin, actual_URI, sv, this->m_body_asFile_path);
         close (sv[1]);
 
@@ -277,7 +277,12 @@ void Client::handle_Request(void)
     if (get == true)
             this->handle_GET(tmp_locationBlock, actual_URI);   
     else if (post == true)
-            this->handle_POST(tmp_locationBlock);  
+    {
+        if (tmp_locationBlock.is_Upload == true)
+            this->handle_POST(tmp_locationBlock);
+        else
+            this->response_Error(405, true); 
+    }
     else if (this->m_request.m_method == "DELETE")
     {
         if (std::find(tmp_allowedMethods.begin(), tmp_allowedMethods.end(), "DELETE") != tmp_allowedMethods.end())

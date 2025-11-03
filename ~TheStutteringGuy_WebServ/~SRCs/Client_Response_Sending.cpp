@@ -25,10 +25,10 @@ void Client::handle_Response(void)
         this->m_response_buffer.erase(0, bytes_to_send);
 
         if (-1 == send(this->m_client_fd, to_send.c_str(), to_send.size(), MSG_DONTWAIT))
-        {
-            _clear(*this);
-            throw std::runtime_error("send() "  + static_cast<std::string>(strerror(errno)));
-        }
+            throw CONTINUE;
+
+        
+        this->m_lastUpdatedTime = getTime();
         throw CONTINUE;
     }
     if (this->m_response_is_aFile == true)
@@ -47,6 +47,7 @@ void Client::handle_Response(void)
         if (-1 == (bytes_sent = send(this->m_client_fd, buffer.c_str(), bytes_read, MSG_DONTWAIT)))
             throw CONTINUE;
 
+        this->m_lastUpdatedTime = getTime();
         if (bytes_sent < bytes_read)
             this->m_response_asFile->seekg(-(bytes_read - bytes_sent), std::ios::cur);
 

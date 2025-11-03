@@ -21,19 +21,19 @@ struct MyLocationBlock
 
     std::string root;
     std::string index;
-    bool autoindex;
+    bool        autoindex;
 
-    std::vector<std::string> allowed_methods;
+    std::vector<std::string>    allowed_methods;
 
-    bool is_Red;
-    std::map<int, std::string> redirection;
+    bool                        is_Red;
+    std::map<int, std::string>  redirection;
 
-    bool is_CGI;
-    std::map<std::string, std::string> cgi_infos;
+    bool                                is_CGI;
+    std::map<std::string, std::string>  cgi_infos;
 
-    bool is_Upload;
-    std::string uplaod_path;
-    std::string actual_URI;
+    bool                is_Upload;
+    std::string         uplaod_path;
+    std::string         actual_URI;
 };
 
 struct MyServerBlock
@@ -43,15 +43,15 @@ struct MyServerBlock
     std::map<std::string, std::vector<std::string> > m_directives;
     std::map<std::string, MyLocationBlock> m_locationBlocks;
 
-    std::vector<std::string> IPs;
-    std::vector<int> Ports;
+    std::vector<std::string>    IPs;
+    std::vector<int>            Ports;
 
     std::string m_root;
     std::string m_cache;
-    std::string m_upload;
+    // std::string m_upload;
 
-    size_t m_client_max_body_size;
-    std::map<int, std::string> m_error_pages;
+    size_t                      m_client_max_body_size;
+    std::map<int, std::string>  m_error_pages;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -59,13 +59,13 @@ struct MyServerBlock
 
 struct Response // this is more like struct HEADER
 {
-    std::string m_HTTP_version;
-    unsigned int m_status_code;
+    std::string     m_HTTP_version;
+    unsigned int    m_status_code;
 
-    bool m_content_needed;
+    bool            m_content_needed;
 
-    std::string m_content_type;
-    int m_content_length;
+    std::string     m_content_type;
+    int             m_content_length;
 
     Response() : m_HTTP_version("HTTP/1.0") {};
     ~Response() {};
@@ -108,8 +108,8 @@ inline std::string uid_generator(void)
 class Client
 {
 public:
-    www::fd_t m_client_fd;
-    MyServerBlock m_Myserver;
+    www::fd_t       m_client_fd;
+    MyServerBlock   m_Myserver;
 
     bool header_done;
     bool need_body;
@@ -122,7 +122,7 @@ public:
     std::string m_body_buffer;
 
 private:
-    Request m_request;
+    Request     m_request;
     std::string m_response_buffer;
 
 private:
@@ -130,27 +130,28 @@ private:
     bool m_response_asFile_init;
 
 public:
-    std::fstream *m_body_asFile;
-    std::string m_body_asFile_path;
+    std::fstream    *m_body_asFile;
+    std::string     m_body_asFile_path;
 
 private:
-    bool m_response_is_aFile;
-    std::fstream *m_response_asFile;
-    std::string m_response_asFile_path;
+    bool            m_response_is_aFile;
+    std::fstream    *m_response_asFile;
+    std::string     m_response_asFile_path;
 
 public:
-    size_t m_lastUpdatedTime;
-    www::fd_t m_CGIfd;
+    size_t      m_lastUpdatedTime;
+    www::fd_t   m_CGIfd;
+    bool        m_CGItimeout;
 
 private: // ahmed
-    std::string session_id;
-    session session_data;
-    bool m_session_needs_set_cookie;
+    std::string     session_id;
+    session         session_data;
+    bool            m_session_needs_set_cookie;
 
 public:
-    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
+    Client() : m_client_fd(-1), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1), m_CGItimeout(false) {};
 
-    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1) {};
+    Client(www::fd_t client_fd) : m_client_fd(client_fd), header_done(false), need_body(true), m_isChunked(false), handling_request(false), readyto_send(false), m_body_asFile_init(false), m_response_asFile_init(false), m_body_asFile(NULL), m_response_is_aFile(false), m_response_asFile(NULL), m_lastUpdatedTime(0), m_CGIfd(-1), m_CGItimeout(false) {};
     ~Client()
     {
         if (m_body_asFile != NULL)
@@ -192,6 +193,7 @@ public:
         this->m_response_buffer = other.m_response_buffer;
         this->m_lastUpdatedTime = other.m_lastUpdatedTime;
         this->m_CGIfd = other.m_CGIfd;
+        this->m_CGItimeout = other.m_CGItimeout;    
 
         this->m_body_asFile = NULL;
         this->m_response_asFile = NULL;
@@ -278,15 +280,15 @@ private:
     // ValuesSingleton& operator=(const ValuesSingleton& other);
 
 public:
-    std::vector<addrinfo *> addrinfo_vect;
-    www::fd_t epoll_fd;
-    std::vector<MyServerBlock> servers_blocks;
+    std::vector<addrinfo *>     addrinfo_vect;
+    www::fd_t                   epoll_fd;
+    std::vector<MyServerBlock>  servers_blocks;
 
-    std::map<www::fd_t, MyServerBlock> _serverfd_map;
-    std::map<www::fd_t, Client> _clients_map;
+    std::map<www::fd_t, MyServerBlock>  _serverfd_map;
+    std::map<www::fd_t, Client>         _clients_map;
 
-    struct HTTPstatus_phrase m_HTTPstatus_phrase;
-    struct FileContent_type m_FileContent_type;
+    struct HTTPstatus_phrase        m_HTTPstatus_phrase;
+    struct FileContent_type         m_FileContent_type;
     struct Reverse_FileContent_type m_Reverse_FileContent_type;
 
     static ValuesSingleton &getValuesSingleton()
@@ -298,10 +300,10 @@ public:
 
 struct CGIs
 {
-    www::fd_t client_fd;
-    pid_t CGIpid;
-    bool Header_sent;
-    size_t timeout;
+    www::fd_t   client_fd;
+    pid_t       CGIpid;
+    bool        Header_sent;
+    size_t      m_lastUpdatedTime;
 
     std::string m_recv_buffer;
     std::string m_headers_buffer;
@@ -311,8 +313,8 @@ struct CGIs
 class CGIManagerSingleton
 {
 public:
-    std::vector<www::fd_t> CGIfds_vect;
-    std::map<www::fd_t, CGIs> CGIsMap;
+    std::vector<www::fd_t>      CGIfds_vect;
+    std::map<www::fd_t, CGIs>   CGIsMap;
 
 private:
     CGIManagerSingleton() {};
@@ -355,6 +357,36 @@ public:
 };
 
 void multiplexer(void);
+
+// ahmed
+// session class
+class sessionManager
+{
+private:
+    std::map<std::string, session> m_session;
+    time_t timeout_sec;
+
+    sessionManager() : timeout_sec(3600) {};
+    ~sessionManager() {};
+
+public:
+    static sessionManager &getSession()
+    {
+        static sessionManager instance;
+        return (instance);
+    };
+
+    time_t getTimeout() const
+    {
+        return (timeout_sec);
+    };
+
+public:
+    std::string generate_session_id();
+    std::string create_session(const std::string &user_id = "");
+    bool get_session(const std::string &session_id, session &out_session);
+    void cleanup_session();
+};
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Functions :
@@ -460,32 +492,3 @@ inline std::string headers_Creator(struct Response response, int)
 //         return std::string(resolved_path);
 //     return "";
 // }
-
-// session class
-class sessionManager
-{
-private:
-    std::map<std::string, session> m_session;
-    time_t timeout_sec;
-
-    sessionManager() : timeout_sec(3600) {};
-    ~sessionManager() {};
-
-public:
-    static sessionManager &getSession()
-    {
-        static sessionManager instance;
-        return (instance);
-    };
-
-    time_t getTimeout() const
-    {
-        return (timeout_sec);
-    };
-
-public:
-    std::string generate_session_id();
-    std::string create_session(const std::string &user_id = "");
-    bool get_session(const std::string &session_id, session &out_session);
-    void cleanup_session();
-};

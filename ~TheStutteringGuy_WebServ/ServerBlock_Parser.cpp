@@ -47,6 +47,8 @@ static std::map<std::string, MyLocationBlock> handle_LocationBlocks(std::vector<
         tmp[locationBlocks[index].path].redirection = locationBlocks[index].redirect_url;
         tmp[locationBlocks[index].path].is_CGI = locationBlocks[index].is_cgi;
         tmp[locationBlocks[index].path].cgi_infos = locationBlocks[index].cgi;
+        tmp[locationBlocks[index].path].is_Upload = locationBlocks[index].upload_on;
+        tmp[locationBlocks[index].path].uplaod_path = locationBlocks[index].upload_path;
     }
     return tmp;
 }
@@ -63,7 +65,6 @@ void API::ServerBlock_Parser(std::vector<ServerBlock> &servers_blocks)
         ref[index].m_locationBlocks = handle_LocationBlocks(servers_blocks[index].locationBlocks);
         ref[index].m_root = root_check(servers_blocks[index].root);
         ref[index].m_cache = ref[index].m_root + "/" + static_cast<std::string>(cache);
-        ref[index].m_upload = ref[index].m_root + "/" + static_cast<std::string>(upload_dir);
         ref[index].m_error_pages = servers_blocks[index].error_pages;
         ref[index].m_directives = directives_tomap(servers_blocks[index].directives);
         ref[index].m_client_max_body_size = servers_blocks[index].clientSizeBody;

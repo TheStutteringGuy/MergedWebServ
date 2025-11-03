@@ -1,16 +1,14 @@
 #include "WebServer.hpp"
-#include <ios>
-#include <stdexcept>
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <sys/wait.h>
 
-// #define TIMEOUT_SEC 30000000
-// #define TIMEOUT_CGI 30000000
+#define TIMEOUT_SIT 30000000
+#define TIMEOUT_CGI 5000000
 
 void _clear(Client &_client)
 {
     std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
+
+    if (client_map.find(_client.m_client_fd) == client_map.end())
+        return;
 
     CGIManagerSingleton::getCGIManagerSingleton().CGIerase(_client.m_CGIfd);
     epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, _client.m_client_fd, NULL);
@@ -19,28 +17,52 @@ void _clear(Client &_client)
     std::cerr << "[INFO] : Cleaning up from My Side" << std::endl;
 }
 
-// void Check_Timeout()
-// {
-//     std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
+void Check_Timeout()
+{
+    std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
+    size_t timeout = getTime();
 
-//     size_t timeout = getTime();
-//     std::map<int, Client>::iterator it = client_map.begin();
-//     while (it != client_map.end())
-//     {
-//         if ((timeout - it->second.m_lastUpdatedTime) >= TIMEOUT_SEC)
-//         {
-//             std::map<int, Client>::iterator temp_it = it;
-//             ++it;
-//             epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_DEL, temp_it->first, NULL);
-//             close(temp_it->first);
-//             client_map.erase(temp_it);
-//         }
-//         else
-//             ++it;
-//     }
+    std::map<www::fd_t, CGIs> &CGIsMap = CGIManagerSingleton::getCGIManagerSingleton().CGIsMap;
+    std::map<www::fd_t, CGIs>::iterator ite = CGIsMap.begin();
+    while (ite != CGIsMap.end())
+    {
+        if ((timeout - ite->second.m_lastUpdatedTime) >= TIMEOUT_CGI)
+        {
+            std::map<www::fd_t, CGIs>::iterator temp_ite = ite++;
+            Client& _client = client_map[temp_ite->second.client_fd];
 
-//     // std::vector<www::fd_t> &_CGIfds_vect = CGIManagerSingleton::getCGIManagerSingleton().CGIfds_vect;
-// }
+            if (temp_ite->second.Header_sent == false)
+            {
+                _client.m_CGItimeout = true;
+
+                epoll_event event;
+                event.events = EPOLLOUT | EPOLLHUP | EPOLLERR;
+                event.data.fd = _client.m_client_fd;
+                epoll_ctl(ValuesSingleton::getValuesSingleton().epoll_fd, EPOLL_CTL_MOD, _client.m_client_fd, &event);
+            }
+            else
+            {
+                std::string theEnd = "0\r\n\r\n";
+                send(temp_ite->second.client_fd, theEnd.c_str(), theEnd.size(), MSG_DONTWAIT | MSG_NOSIGNAL);
+                _clear(_client);
+            }
+        }
+        else
+            ++ite;
+    }
+
+    std::map<int, Client>::iterator it = client_map.begin();
+    while (it != client_map.end())
+    {
+        if ((timeout - it->second.m_lastUpdatedTime) >= TIMEOUT_SIT)
+        {
+            std::map<int, Client>::iterator temp_it = it++;
+            _clear(temp_it->second);
+        }
+        else
+            ++it;
+    }
+}
 
 void multiplexer(void)
 {
@@ -48,6 +70,8 @@ void multiplexer(void)
     std::map<int, Client> &client_map = ValuesSingleton::getValuesSingleton()._clients_map;
     std::map<www::fd_t, MyServerBlock>  &serverfd_map = ValuesSingleton::getValuesSingleton()._serverfd_map;
     std::vector<www::fd_t> &_CGIfds_vect = CGIManagerSingleton::getCGIManagerSingleton().CGIfds_vect;
+
+    Check_Timeout(); // well It Does What the Name implies
 
     epoll_event events[MAX_EVENTS];
     int n = epoll_wait(epoll_fd, events, MAX_EVENTS, 10000);
@@ -87,7 +111,11 @@ void multiplexer(void)
             if (std::find(_CGIfds_vect.begin(), _CGIfds_vect.end(), events[index].data.fd) != _CGIfds_vect.end())
             {
                 CGIs& CGItohandle = CGIManagerSingleton::getCGIManagerSingleton().CGIsMap[events[index].data.fd];
-                Client& _client = client_map[CGItohandle.client_fd];
+
+                std::map<int, Client>::iterator it = client_map.find(events[index].data.fd);
+                if (it == client_map.end())
+                    continue;
+                Client& _client = it->second;
 
                 if (events[index].events & EPOLLIN)
                     CGIManagerSingleton::ManagingCGI(CGItohandle, _client, events[index].data.fd);
@@ -97,7 +125,7 @@ void multiplexer(void)
                     {
                         std::string theEnd = "0\r\n\r\n";
                         if (send(CGItohandle.client_fd, theEnd.c_str(), theEnd.size(), MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
-                            throw std::runtime_error("send() Failed To Send The Last Chunk (EPOLLHUP)");
+                            continue;
                         _clear(_client);
                     }
                     else 
@@ -105,6 +133,7 @@ void multiplexer(void)
                 }
                 continue;
             }
+            // CGI STUFF ^
 
             std::map<int, Client>::iterator it = client_map.find(events[index].data.fd);
             if (it == client_map.end())
@@ -123,10 +152,16 @@ void multiplexer(void)
                     Client &_client = it->second;
                     if (_client.readyto_send == false)
                     {
+                        if (events[index].events & EPOLLOUT)
+                        {
+                            if (it->second.m_CGItimeout == true)
+                                it->second.response_Error(504, true);
+                        }
+
                         char buffer[ReadingSize];
                         memset(buffer, 0, sizeof(buffer));
                         ssize_t bytes_read = recv(_client.m_client_fd, buffer, sizeof(buffer), MSG_DONTWAIT);
-                        
+
                         if (-1 == bytes_read)
                             continue;
                         else if (0 == bytes_read)

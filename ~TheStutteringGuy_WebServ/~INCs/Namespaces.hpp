@@ -17,7 +17,6 @@ namespace www {
     extern const std::string Allowed_Chars;
 
     #define cache ".Cache/"
-    #define upload_dir "Upload/"
     
     extern const std::string RED;
     extern const std::string GREEN;

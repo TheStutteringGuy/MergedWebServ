@@ -1,4 +1,5 @@
 #include "WebServer.hpp"
+#include <exception>
 #include <iostream>
 #include <vector>
 
@@ -46,9 +47,8 @@ int API::Webserver(void)
         for (size_t index = 0; index < server_blocks.size(); ++index)
         {
             std::string &l_cache = server_blocks[index].m_cache;
-            std::string l_upload = server_blocks[index].m_upload;
 
-            if (access(l_cache.c_str(), F_OK | R_OK | W_OK) != 0 || access(l_upload.c_str(), F_OK | R_OK | W_OK) != 0)
+            if (access(l_cache.c_str(), F_OK | R_OK | W_OK) != 0)
                 throw std::logic_error("Please Follow The Rules => (Cache/Uplaod) one");
         }
 
@@ -137,8 +137,11 @@ int API::Webserver(void)
             catch(const std::logic_error &e) {
                 throw e;
             }
+            catch(const std::exception &e) {
+                std::cerr << e.what() << std::endl;
+            }
             catch(...) {
-                std::cerr << "An unknown exception was caught in the main loop!" << std::endl;
+                std::cerr << "An unknown exception was caught in the loop!" << std::endl;
             }
         }
     }

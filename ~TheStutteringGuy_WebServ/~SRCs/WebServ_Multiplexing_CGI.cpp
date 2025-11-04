@@ -16,12 +16,6 @@ static bool manage_Headers(CGIs& CGItohandle)
     return true;
 }
 
-static void Update_Time(CGIs& CGItohandle, Client& _client)
-{
-    CGItohandle.m_lastUpdatedTime = getTime();
-    _client.m_lastUpdatedTime = getTime();
-}
-
 void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::fd_t& CGIfd)
 {
     try
@@ -29,7 +23,6 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
         char buffer[ReadingSize];
         memset(buffer, 0, sizeof(buffer));
         ssize_t read_bytes = recv(CGIfd, buffer, sizeof(buffer), MSG_DONTWAIT | MSG_NOSIGNAL);
-        Update_Time(CGItohandle, _client);
 
         if (read_bytes == -1)
             return ;
@@ -55,10 +48,8 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
                 
                 if (send(CGItohandle.client_fd, Header.c_str(), Header.size(), MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                     return ;
-                Update_Time(CGItohandle, _client);
                 if (send(CGItohandle.client_fd, CGItohandle.m_headers_buffer.c_str(), CGItohandle.m_headers_buffer.size(), MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                     return ;
-                Update_Time(CGItohandle, _client);
 
                 CGItohandle.Header_sent = true;
                 if (!CGItohandle.m_body_buffer.empty())
@@ -69,16 +60,16 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
 
                     if (send(CGItohandle.client_fd, size.c_str(), size.size(), MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                         return ;
-                    Update_Time(CGItohandle, _client);
+
                     if (send(CGItohandle.client_fd, "\r\n", 2, MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                         return ;
-                    Update_Time(CGItohandle, _client);
+
                     if (send(CGItohandle.client_fd, CGItohandle.m_body_buffer.c_str(), CGItohandle.m_body_buffer.size(), MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                         return ;
-                    Update_Time(CGItohandle, _client);
+
                     if (send(CGItohandle.client_fd, "\r\n", 2, MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                         return ;
-                    Update_Time(CGItohandle, _client);
+
                 }
             }
         }
@@ -92,7 +83,6 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
                     std::cerr <<  "send() Failed To Send The Last Chunk" << std::endl;
                     return;
                 }
-                Update_Time(CGItohandle, _client);
                 throw CLEAR;
             }
             if (read_bytes > 0)
@@ -103,16 +93,12 @@ void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::f
 
                 if (send(CGItohandle.client_fd, size.c_str(), size.size(), MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                     return;
-                Update_Time(CGItohandle, _client);
                 if (send(CGItohandle.client_fd, "\r\n", 2, MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                     return;
-                Update_Time(CGItohandle, _client);
                 if (send(CGItohandle.client_fd, buffer, read_bytes, MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                     return;
-                Update_Time(CGItohandle, _client);
                 if (send(CGItohandle.client_fd, "\r\n", 2, MSG_DONTWAIT | MSG_NOSIGNAL) == -1)
                     return;
-                Update_Time(CGItohandle, _client);
             }
         }
     }

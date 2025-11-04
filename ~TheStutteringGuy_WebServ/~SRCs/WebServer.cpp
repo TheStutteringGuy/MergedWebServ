@@ -1,6 +1,5 @@
 #include "WebServer.hpp"
-#include <exception>
-#include <iostream>
+#include <unistd.h>
 #include <vector>
 
 const std::string www::Allowed_Chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 .-_~:/?#[]@!$&'()*+,;=%";
@@ -34,6 +33,27 @@ void Print_Infos(void)
         std::cout << "║  💾 Max Body:    " << std::setw(33) << std::left << servers_blocks[index].m_client_max_body_size << "║" << std::endl;
         std::cout << "╚═══════════════════════════════════════════════════╝" << std::endl << std::endl;
     } 
+}
+
+void Garbage_Cleaner(void)
+{
+    class ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
+    close(cleanup.epoll_fd);
+
+    for (std::vector<addrinfo *>::iterator it = cleanup.addrinfo_vect.begin(); it != cleanup.addrinfo_vect.end(); ++it)
+        freeaddrinfo(*it);
+
+    std::vector<www::fd_t>& open_fds = cleanup.open_fds;
+    for (std::vector<www::fd_t>::iterator it = open_fds.begin(); it != open_fds.end(); ++it)
+        close(*it);
+
+    class CGIManagerSingleton& CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
+    for (std::vector<www::fd_t>::iterator it = CGImanager.CGIfds_vect.begin(); it != CGImanager.CGIfds_vect.end(); ++it)
+        CGImanager.CGIeraseFrom_Map(*it);
+
+    std::map<www::fd_t, Client>& Clients_map  = cleanup._clients_map;
+    for (std::map<www::fd_t, Client>::iterator it = Clients_map.begin(); it != Clients_map.end(); ++it)
+        close(it->second.m_client_fd);
 }
 
 int API::Webserver(void)
@@ -122,6 +142,7 @@ int API::Webserver(void)
                 if (-1 == epoll_ctl(epoll_fd, EPOLL_CTL_ADD, socket_fd, &event))
                     throw std::logic_error("epoll_ctl() " + static_cast<std::string>(strerror(errno)));
                 
+                ValuesSingleton::getValuesSingleton().open_fds.push_back(socket_fd);
                 serverfd_map[socket_fd] = server_blocks[index];
             }
         }
@@ -152,12 +173,6 @@ int API::Webserver(void)
         std::cerr << "An unknown exception was caught in the main loop!" << std::endl;
     }
 
-    class ValuesSingleton& cleanup = ValuesSingleton::getValuesSingleton();
-    for (size_t index = 0; index < cleanup.addrinfo_vect.size(); ++index)
-        freeaddrinfo(cleanup.addrinfo_vect[index]);
-
-    class CGIManagerSingleton& CGImanager = CGIManagerSingleton::getCGIManagerSingleton();
-    for (std::vector<www::fd_t>::iterator it = CGImanager.CGIfds_vect.begin(); it != CGImanager.CGIfds_vect.end(); ++it)
-        CGImanager.CGIeraseFrom_Map(*it);
+    Garbage_Cleaner();
     return 0;
 }

@@ -1,4 +1,5 @@
 #include "WebServer.hpp"
+#include <csignal>
 
 pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, www::fd_t *sv, const std::string& body_File)
 {
@@ -9,8 +10,9 @@ pid_t Client::Handle_CGI(const std::string bin, const std::string actual_URI, ww
         std::exit(1);
     else if (pid == 0)
     {
+        signal(SIGINT, SIG_IGN);
         close(sv[0]);
-        if (dup2(sv[1], STDERR_FILENO) == -1 || dup2(sv[1], STDOUT_FILENO) == -1)
+        if ( /* dup2(sv[1], STDERR_FILENO) == -1 || */ dup2(sv[1], STDOUT_FILENO) == -1)
         {
             std::cerr << "dup2() failed !!" << std::endl;
             std::exit(1);

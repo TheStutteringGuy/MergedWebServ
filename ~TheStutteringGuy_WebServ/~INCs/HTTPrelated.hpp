@@ -283,6 +283,7 @@ public:
     std::vector<addrinfo *>     addrinfo_vect;
     www::fd_t                   epoll_fd;
     std::vector<MyServerBlock>  servers_blocks;
+    std::vector<www::fd_t>      open_fds;
 
     std::map<www::fd_t, MyServerBlock>  _serverfd_map;
     std::map<www::fd_t, Client>         _clients_map;

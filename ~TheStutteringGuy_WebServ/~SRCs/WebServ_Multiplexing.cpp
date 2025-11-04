@@ -1,7 +1,7 @@
 #include "WebServer.hpp"
 
 #define TIMEOUT_SIT 30000000
-#define TIMEOUT_CGI 5000000
+#define TIMEOUT_CGI 30000000
 
 void _clear(Client &_client)
 {
@@ -112,14 +112,17 @@ void multiplexer(void)
             {
                 CGIs& CGItohandle = CGIManagerSingleton::getCGIManagerSingleton().CGIsMap[events[index].data.fd];
 
-                std::map<int, Client>::iterator it = client_map.find(events[index].data.fd);
+                std::map<int, Client>::iterator it = client_map.find(CGItohandle.client_fd);
                 if (it == client_map.end())
                     continue;
                 Client& _client = it->second;
 
                 if (events[index].events & EPOLLIN)
+                {
                     CGIManagerSingleton::ManagingCGI(CGItohandle, _client, events[index].data.fd);
-                else if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)
+                    continue;
+                }
+                if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)
                 {
                     if (CGItohandle.Header_sent == true)
                     {

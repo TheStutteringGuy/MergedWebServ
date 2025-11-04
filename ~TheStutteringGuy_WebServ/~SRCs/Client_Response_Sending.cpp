@@ -26,7 +26,6 @@ void Client::handle_Response(void)
 
         if (-1 == send(this->m_client_fd, to_send.c_str(), to_send.size(), MSG_DONTWAIT))
             throw CONTINUE;
-
         
         this->m_lastUpdatedTime = getTime();
         throw CONTINUE;

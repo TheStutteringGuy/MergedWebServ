@@ -119,7 +119,7 @@ void multiplexer(void)
 
                 if (events[index].events & EPOLLIN)
                 {
-                    CGIManagerSingleton::ManagingCGI(CGItohandle, _client, events[index].data.fd);
+                    CGIManagerSingleton::ManagingCGI(CGItohandle, _client,events[index].data.fd);
                     continue;
                 }
                 if (events[index].events & EPOLLERR || events[index].events & EPOLLHUP)

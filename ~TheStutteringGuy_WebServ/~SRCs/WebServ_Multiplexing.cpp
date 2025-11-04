@@ -1,7 +1,7 @@
 #include "WebServer.hpp"
 
 #define TIMEOUT_SIT 30000000
-#define TIMEOUT_CGI 30000000
+#define TIMEOUT_CGI 20000000
 
 void _clear(Client &_client)
 {

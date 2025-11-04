@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:22 by ahmed             #+#    #+#             */
-/*   Updated: 2025/11/02 23:45:10 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/03 22:01:10 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -56,6 +56,7 @@ private:
   bool existFile(const std::string &path);
   bool existDirectory(const std::string &path);
   std::string handlePath(const std::string &base, const std::string &path);
+  std::string handlePathUpload(const std::string &base, const std::string &path);
 
   class InvalidPortException : public std::exception
   {

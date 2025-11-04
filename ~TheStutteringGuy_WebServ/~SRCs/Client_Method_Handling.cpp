@@ -7,7 +7,7 @@ static std::string getParentPath(const std::string& filepath)
 
     pos = filepath.find_last_of('/');
     parent_path = filepath.substr(0, pos + 1);
-
+    
     return parent_path;
 }
 

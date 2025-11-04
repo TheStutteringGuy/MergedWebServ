@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:24 by ahmed             #+#    #+#             */
-/*   Updated: 2025/11/02 23:47:04 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/03 22:10:24 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -258,6 +258,9 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
     {
         if (location.upload_path.empty())
             throw InvalidUploadPath();
+        std::string full_path = handlePathUpload(server.root, location.upload_path);
+        if (!existDirectory(full_path))
+            throw InvalidUploadPath();
     }
 };
 
@@ -351,5 +354,20 @@ std::string ConfigProcessor::handlePath(const std::string &base, const std::stri
     if (!res.empty() && res[res.length() - 1] != '/')
         res += "/";
     res += path;
+    return (res);
+};
+
+std::string ConfigProcessor::handlePathUpload(const std::string &base, const std::string &path)
+{
+    if (path.empty())
+        return (base);
+    std::string res = base;
+    if (!res.empty() && res[res.length() - 1] != '/')
+        res += '/';   
+    std::string final_path = path;
+    if (!final_path.empty() && final_path[0] == '/')
+        final_path.erase(0, 1);
+    
+    res += final_path;
     return (res);
 };

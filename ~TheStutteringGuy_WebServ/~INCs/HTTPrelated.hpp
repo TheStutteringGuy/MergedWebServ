@@ -486,31 +486,6 @@ inline std::string headers_Creator(struct Response response, int)
     return Response;
 }
 
-// ahmed headers creator overload function for sessions
-inline std::string headers_Creator(struct Response response, std::string &set_cookie_header_to_append, bool is_header_block)
-{
-    std::string end = "\r\n";
-    std::string eoh = "\r\n\r\n";
-    std::string s = " ";
-
-    std::string l_status_code = to_string_c98(response.m_status_code);
-    std::string l_phrase = s + ValuesSingleton::getValuesSingleton().m_HTTPstatus_phrase.getStatusPhrase(l_status_code);
-
-    std::string Response = response.m_HTTP_version + s + l_status_code + s + l_phrase + end;
-    Response += "Date: " + get_http_date() + end;
-    Response += "Connection: close" + end;
-    if (!set_cookie_header_to_append.empty())
-        Response += set_cookie_header_to_append;
-
-    Response += "Content-Type: " + response.m_content_type + end;
-    Response += "Content-Length: " + to_string_c98(response.m_content_length) + end;
-
-    if (is_header_block)
-        Response += eoh;
-
-    return (Response);
-};
-
 // inline std::string getFullPath(const std::string& relative_path)
 // {
 //     char resolved_path[PATH_MAX];

@@ -6,7 +6,7 @@
 /*   By: aahlaqqa <aahlaqqa@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/07/01 16:54:24 by ahmed             #+#    #+#             */
-/*   Updated: 2025/11/03 22:10:24 by aahlaqqa         ###   ########.fr       */
+/*   Updated: 2025/11/10 11:21:56 by aahlaqqa         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -77,14 +77,14 @@ size_t ConfigProcessor::parseClientBodySize(const std::string &value)
         throw InvalidClientBodySize();
     size_t i;
     i = 0;
-    while (i < value.size() && (isdigit(value[i]) || value[i] == '.'))
+    while (i < value.size() && (std::isdigit(value[i]) || value[i] == '.'))
         i++;
     std::string numPart;
     std::string unitPart;
     numPart = value.substr(0, i);
     unitPart = value.substr(i);
     for (size_t j = 0; j < unitPart.size(); j++)
-        unitPart[j] = tolower(unitPart[j]);
+        unitPart[j] = std::tolower(unitPart[j]);
     std::istringstream ss(numPart);
     double num = 0;
     ss >> num;
@@ -177,7 +177,7 @@ bool ConfigProcessor::is_Num(const std::string &str)
         return (false);
     for (std::string::size_type i = 0; i < str.size(); i++)
     {
-        if (!isdigit(str[i]))
+        if (!std::isdigit(str[i]))
             return (false);
     }
     return (true);

@@ -11,6 +11,7 @@
 #include <arpa/inet.h>
 
 #include <cstring>
+#include <cctype>
 #include <ctime>
 
 #include <stdexcept>

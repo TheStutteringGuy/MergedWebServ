@@ -21,7 +21,6 @@ if content_length and content_length.isdigit() and int(content_length) > 0:
 new_visit_timestamp = int(time.time())
 cookie_attributes = f"Max-Age=3600; Path=/; HttpOnly" 
 
-sys.stdout.write("Status: 200 OK\r\n")
 sys.stdout.write("Content-Type: text/plain\r\n")
 
 if server_set_cookie:

@@ -367,7 +367,7 @@ private:
     std::map<std::string, session> m_session;
     time_t timeout_sec;
 
-    sessionManager() : timeout_sec(3600) {};
+    sessionManager() : timeout_sec(36) {};
     ~sessionManager() {};
 
 public:

@@ -47,7 +47,7 @@ static std::map<std::string, MyLocationBlock> handle_LocationBlocks(std::vector<
         tmp[locationBlocks[index].path].redirection = locationBlocks[index].redirect_url;
         tmp[locationBlocks[index].path].is_CGI = locationBlocks[index].is_cgi;
         tmp[locationBlocks[index].path].cgi_infos = locationBlocks[index].cgi;
-        tmp[locationBlocks[index].path].is_Upload = locationBlocks[index].upload_on;
+        tmp[locationBlocks[index].path].is_Upload = locationBlocks[index].upload;
         tmp[locationBlocks[index].path].uplaod_path = locationBlocks[index].upload_path;
     }
     return tmp;

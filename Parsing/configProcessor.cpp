@@ -188,7 +188,7 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
     (void)server;
     location.is_cgi = false;
     location.is_redirection = false;
-    location.upload_on = false;
+    location.upload = false;
     location.upload_path = "";
     for (size_t i = 0; i < location.directives.size(); i++)
     {
@@ -210,10 +210,10 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
             if (!dir.values.empty())
                 location.autoindex = (dir.values[0] == "on");
         }
-        else if (dir.name == "upload_on")
+        else if (dir.name == "upload")
         {
             if (!dir.values.empty() && dir.values[0] == "on")
-                location.upload_on = true;
+                location.upload = true;
         }
         else if (dir.name == "upload_path")
         {
@@ -254,7 +254,7 @@ void ConfigProcessor::processLocationDirective(LocationBlock &location, const Se
         }
     }
 
-    if (location.upload_on == true)
+    if (location.upload == true)
     {
         if (location.upload_path.empty())
             throw InvalidUploadPath();

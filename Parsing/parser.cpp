@@ -20,7 +20,7 @@ Parser::~Parser() {
 
 };
 
-LocationBlock::LocationBlock() : autoindex(false), is_redirection(false), is_cgi(false), upload_on(false) {};
+LocationBlock::LocationBlock() : autoindex(false), is_redirection(false), is_cgi(false), upload(false) {};
 
 LocationBlock::~LocationBlock() {};
 
@@ -289,7 +289,7 @@ void Parser::validatConfig() const
     validDirectives.insert("return");
     validDirectives.insert("cgi");
     validDirectives.insert("client_max_body_size");
-    validDirectives.insert("upload_on");
+    validDirectives.insert("upload");
     validDirectives.insert("upload_path");
     
     for (size_t i = 0; i < server_blocks.size(); i++)

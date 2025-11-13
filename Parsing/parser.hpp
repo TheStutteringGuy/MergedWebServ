@@ -51,7 +51,7 @@ struct LocationBlock
     bool is_redirection;
     bool is_cgi;
     // for upload
-    bool upload_on;
+    bool upload;
     std::string upload_path;
 };
 

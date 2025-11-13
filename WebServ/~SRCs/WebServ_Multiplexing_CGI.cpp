@@ -22,7 +22,7 @@ void Update_time(CGIs& CGItohandle, Client& _client)
     _client.m_lastUpdatedTime = getTime();
 }
 
-void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, www::fd_t& CGIfd)
+void CGIManagerSingleton::ManagingCGI(CGIs& CGItohandle, Client& _client, const www::fd_t& CGIfd)
 {
     try
     {

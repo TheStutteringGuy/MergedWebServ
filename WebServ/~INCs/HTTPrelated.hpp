@@ -354,7 +354,7 @@ public:
         this->CGIeraseFrom_Map(fd);
     }
 
-    static void ManagingCGI(CGIs &CGItohandle, Client &_client, www::fd_t &CGIfd);
+    static void ManagingCGI(CGIs &CGItohandle, Client &_client, const www::fd_t &CGIfd);
 };
 
 void multiplexer(void);

@@ -5,8 +5,8 @@ CPPFLAGS = -Wall -Wextra -Werror -std=c++98 -g3
 RM = rm -f
 
 NAME = webserv
-SRC = main.cpp Parsing/*.cpp ~TheStutteringGuy_WebServ/*.cpp ~TheStutteringGuy_WebServ/*/*.cpp
-HEADER = Parsing/*.hpp ~TheStutteringGuy_WebServ/*.hpp ~TheStutteringGuy_WebServ/*/*.hpp
+SRC = main.cpp Parsing/*.cpp WebServ/*.cpp WebServ/*/*.cpp
+HEADER = Parsing/*.hpp WebServ/*.hpp WebServ/*/*.hpp
 
 # Rules :
 
